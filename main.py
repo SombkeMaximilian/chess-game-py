@@ -94,7 +94,7 @@ def main():
         # event queue
         for event in p.event.get():
             
-            # quit the game
+            # stop the while loop if the user exits the game
             if event.type == p.QUIT:
                 active = False
         
@@ -104,7 +104,7 @@ def main():
         clock.tick(FPS)
         p.display.flip()
     
-    # close the window when the user exits out
+    # close the window
     p.quit()
     
     
