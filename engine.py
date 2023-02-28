@@ -3,8 +3,8 @@
 class GameState():
     
     """
-    This class stores all the information about the game state. Legal moves, 
-    the board, a log of moves, whose turn it is.
+    This class stores all the information about the game state. Legal moves, the board, a log of 
+    moves, whose turn it is, etc.
     """
     
     def __init__(self):
