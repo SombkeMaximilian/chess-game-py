@@ -1,2 +1,3 @@
 # Chess Game in Python
-a simple chess engine in python
+
+Images of chess pieces taken from https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces
