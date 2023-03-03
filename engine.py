@@ -35,3 +35,18 @@ class GameState():
             ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
             ]
+        
+        
+class MovePiece():
+    """
+    This class is responsible for performing moves of pieces, it also stores
+    the information about which piece was moved and which piece was captured,
+    if any.
+    """
+    
+    
+    def __init__(self, start: tuple, destination: tuple, board):
+        
+        self.startRow, self.startCol = start
+        
+        self.destinationRow, self.destinationCol = destination

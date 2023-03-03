@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import pygame as p
+import math
 
 import engine
 import graphics
@@ -14,7 +15,7 @@ FPS the game runs at, possibly allow the user to change this later.
 Image names of the pieces will be kept in the dictionary IMG.
 """
 
-WIDTH = HEIGHT = 1024
+WIDTH = HEIGHT = 512
 DIM = 8
 SQUARE_SIZE = int(WIDTH / DIM)
 FPS = 10
@@ -40,6 +41,11 @@ def main():
     # load the pieces into memory
     IMG = graphics.loadPieceImages()
     
+    # keeping track of mouse clicks and which piece is being moved
+    clicks = 0
+    selectedSquare = ()
+    moveCoordinates = []
+    
     # start running the game, this section updates game state and graphics
     active = True
     while active:
@@ -49,7 +55,33 @@ def main():
             
             # stop the while loop if the user exits the game
             if event.type == p.QUIT:
+                
                 active = False
+            
+            if event.type == p.MOUSEBUTTONDOWN:
+                
+                # read coordinates of mouse clicks 
+                mouseClick = (math.floor(coordinate / SQUARE_SIZE) 
+                              for coordinate in p.mouse.get_pos())
+                
+                # unselecting the square
+                if mouseClick == selectedSquare:
+                    
+                    selectedSquare = ()
+                    moveCoordinates = []
+                    clicks = 0
+                
+                # store coordinates of the mouse click
+                else:
+                    
+                    selectedSquare = mouseClick
+                    moveCoordinates.append(selectedSquare)
+                    clicks += 1
+                
+                if clicks == 2:
+                    
+                    pass
+                    
         
         # update the graphics
         graphics.drawGameState(window, gamestate, SQUARE_SIZE, DIM, IMG)

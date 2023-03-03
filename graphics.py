@@ -17,7 +17,7 @@ def loadPieceImages():
         
     return images
         
-def drawGameState(window, gamestate, SQUARE_SIZE, DIM, IMG):
+def drawGameState(window, gamestate, SQUARE_SIZE: int, DIM: int, IMG: dict):
     """
     Draws a given game state on screen and updates it.
     """
