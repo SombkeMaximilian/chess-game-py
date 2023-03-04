@@ -42,19 +42,43 @@ class GameState():
         
         
         
-    def performMove(self, MovePiece):
+    def performMove(self, Move):
         """
         Alters the board to reflect a performed move and changes turn player.
         """
         
-        self.board[MovePiece.startRow][MovePiece.startCol] = "em"
-        self.board[MovePiece.destinationRow][MovePiece.destinationCol] = MovePiece.movedPiece
+        # move the piece on the board
+        self.board[Move.startRow][Move.startCol] = "em"
+        self.board[Move.destinationRow][Move.destinationCol] = Move.movedPiece
         
-        self.moveLog.append(MovePiece)
+        # add the move to the log
+        self.moveLog.append(Move)
+        
+        # change the turn player
         self.turnPlayer = [player for player in self.players 
                            if player != self.turnPlayer][0]
         
-class MovePiece():
+    def undoMove(self):
+        """
+        Undo the last move.
+        """
+        
+        # check if there is a move to undo (log is not empty)
+        if self.moveLog:
+            
+            # grab the last move and remove it from the log
+            lastMove = self.moveLog[-1]    
+            del self.moveLog[-1]
+            
+            # undo the move
+            self.board[lastMove.startRow][lastMove.startCol] = lastMove.movedPiece
+            self.board[lastMove.destinationRow][lastMove.destinationCol] = lastMove.capturedPiece
+            
+            # change the turn player back
+            self.turnPlayer = [player for player in self.players 
+                               if player != self.turnPlayer][0]
+        
+class Move():
     """
     This class is responsible for calculating moves of pieces, it also stores
     the information about which piece was moved and which piece was captured,

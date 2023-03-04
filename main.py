@@ -60,13 +60,14 @@ def main():
                 
                 active = False
             
+            # mouse presses
             if event.type == p.MOUSEBUTTONDOWN:
                 
                 # read coordinates of mouse clicks 
                 mouseClick = tuple(math.floor((coordinate - BORDERS) / SQUARE_SIZE) 
                                    for coordinate in p.mouse.get_pos())
                 
-                # unselecting the square
+                # unselecting by clicking again
                 if mouseClick == selectedSquare:
                     
                     selectedSquare = ()
@@ -81,11 +82,19 @@ def main():
                 # move piece if 2 clicks in different squares were made
                 if len(moveCoordinates) == 2:
                     
-                    move = engine.MovePiece(moveCoordinates[0], moveCoordinates[1], gamestate.board)
+                    move = engine.Move(moveCoordinates[0], moveCoordinates[1], gamestate.board)
                     gamestate.performMove(move)
                     
                     selectedSquare = ()
                     moveCoordinates = []
+        
+            # key presses
+            if event.type == p.KEYDOWN:
+                
+                # undo moves
+                if event.key == p.K_u:
+                    gamestate.undoMove()
+                                
         
         # update the graphics
         graphics.drawGameState(window, gamestate, SQUARE_SIZE, BORDERS, DIM, IMG)
