@@ -36,10 +36,27 @@ class GameState():
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
             ]
         
+        self.players = ["white", "black"]
+        self.turnPlayer = "white"
+        self.moveLog = []
+        
+        
+        
+    def performMove(self, MovePiece):
+        """
+        Alters the board to reflect a performed move and changes turn player.
+        """
+        
+        self.board[MovePiece.startRow][MovePiece.startCol] = "em"
+        self.board[MovePiece.destinationRow][MovePiece.destinationCol] = MovePiece.movedPiece
+        
+        self.moveLog.append(MovePiece)
+        self.turnPlayer = [player for player in self.players 
+                           if player != self.turnPlayer][0]
         
 class MovePiece():
     """
-    This class is responsible for performing moves of pieces, it also stores
+    This class is responsible for calculating moves of pieces, it also stores
     the information about which piece was moved and which piece was captured,
     if any.
     """
@@ -47,6 +64,29 @@ class MovePiece():
     
     def __init__(self, start: tuple, destination: tuple, board):
         
+        # store start position and destination
         self.startRow, self.startCol = start
-        
         self.destinationRow, self.destinationCol = destination
+        
+        # store moved and captured pieces
+        self.movedPiece = board[self.startRow][self.startCol]
+        self.capturedPiece = board[self.destinationRow][self.destinationCol]
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        

@@ -9,6 +9,7 @@ import graphics
 """
 Global variables for displaying the chess board.
 WIDTH and HEIGHT of the board, possibly allow the user to change this later.
+BORDERS around the board for extra features.
 DIM = Dimensions of the board is always 8.
 Each row and column has 8 squares of size SQUARE_SIZE.
 FPS the game runs at, possibly allow the user to change this later.
@@ -16,6 +17,7 @@ Image names of the pieces will be kept in the dictionary IMG.
 """
 
 WIDTH = HEIGHT = 512
+BORDERS = 200
 DIM = 8
 SQUARE_SIZE = int(WIDTH / DIM)
 FPS = 10
@@ -31,7 +33,8 @@ def main():
     p.init()
     
     # get a pygame window
-    window = p.display.set_mode((WIDTH, HEIGHT))
+    window = p.display.set_mode((WIDTH+2*BORDERS, HEIGHT+2*BORDERS))
+    window.fill(p.Color("white"))
     # get a pygame clock
     clock = p.time.Clock()
     
@@ -42,7 +45,6 @@ def main():
     IMG = graphics.loadPieceImages()
     
     # keeping track of mouse clicks and which piece is being moved
-    clicks = 0
     selectedSquare = ()
     moveCoordinates = []
     
@@ -61,30 +63,32 @@ def main():
             if event.type == p.MOUSEBUTTONDOWN:
                 
                 # read coordinates of mouse clicks 
-                mouseClick = (math.floor(coordinate / SQUARE_SIZE) 
-                              for coordinate in p.mouse.get_pos())
+                mouseClick = tuple(math.floor((coordinate - BORDERS) / SQUARE_SIZE) 
+                                   for coordinate in p.mouse.get_pos())
                 
                 # unselecting the square
                 if mouseClick == selectedSquare:
                     
                     selectedSquare = ()
                     moveCoordinates = []
-                    clicks = 0
                 
-                # store coordinates of the mouse click
-                else:
+                # check if click is inside the chess board
+                elif mouseClick[0] in range(8) and mouseClick[1] in range(8):
                     
                     selectedSquare = mouseClick
-                    moveCoordinates.append(selectedSquare)
-                    clicks += 1
+                    moveCoordinates.append(reversed(selectedSquare))
                 
-                if clicks == 2:
+                # move piece if 2 clicks in different squares were made
+                if len(moveCoordinates) == 2:
                     
-                    pass
+                    move = engine.MovePiece(moveCoordinates[0], moveCoordinates[1], gamestate.board)
+                    gamestate.performMove(move)
                     
+                    selectedSquare = ()
+                    moveCoordinates = []
         
         # update the graphics
-        graphics.drawGameState(window, gamestate, SQUARE_SIZE, DIM, IMG)
+        graphics.drawGameState(window, gamestate, SQUARE_SIZE, BORDERS, DIM, IMG)
     
         clock.tick(FPS)
         p.display.flip()

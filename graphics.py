@@ -17,7 +17,7 @@ def loadPieceImages():
         
     return images
         
-def drawGameState(window, gamestate, SQUARE_SIZE: int, DIM: int, IMG: dict):
+def drawGameState(window, gamestate, SQUARE_SIZE: int, BORDERS: int, DIM: int, IMG: dict):
     """
     Draws a given game state on screen and updates it.
     """
@@ -33,7 +33,7 @@ def drawGameState(window, gamestate, SQUARE_SIZE: int, DIM: int, IMG: dict):
             # color that the square should have, even indices are white, odd are black
             color = boardColors[((row + col) % 2)]
             # rect object with x, y position of square and its size
-            square = p.Rect(col*SQUARE_SIZE, row*SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE)
+            square = p.Rect(col*SQUARE_SIZE+BORDERS, row*SQUARE_SIZE+BORDERS, SQUARE_SIZE, SQUARE_SIZE)
             # draw the rectangle
             p.draw.rect(window, color, square)
     
@@ -51,6 +51,6 @@ def drawGameState(window, gamestate, SQUARE_SIZE: int, DIM: int, IMG: dict):
             if currentSquare == "em":
                 continue
             
-            square = p.Rect(col*SQUARE_SIZE, row*SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE)
+            square = p.Rect(col*SQUARE_SIZE+BORDERS, row*SQUARE_SIZE+BORDERS, SQUARE_SIZE, SQUARE_SIZE)
             piece = p.transform.scale(IMG[currentSquare], (SQUARE_SIZE, SQUARE_SIZE))
             window.blit(piece, square)
