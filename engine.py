@@ -91,7 +91,7 @@ class GameState():
         """
         
         # list that contains the moves
-        moves = [Move((7,6), (5,5), self.board)]
+        moves = []
         
         # dictionary for calling the corresponding function
         pieceMoveLogic = {"P" : self.pawnMoveLogic,
@@ -124,26 +124,105 @@ class GameState():
     """
     
     def pawnMoveLogic(self, row: int, col: int, moves: list):
-        pass
-    
+        """
+        Calculates all moves a pawn on a given row and column can make.
+        """
+        
+        # white pawns move up, black pawns move down
+        if self.turnPlayer == "w":
+            u = -1
+        elif self.turnPlayer == "b":
+            u = 1    
+        
+        # check if square in front of the pawn is empty
+        if self.board[row+u][col] == "em":
+            
+            # add moving 1 square forward as a legal move
+            moves.append(Move((row, col), (row+u, col), self.board))
+            
+            # pawns can move 2 squares if they haven't moved yet
+            if (row == 6 and self.turnPlayer == "w") or \
+               (row == 1 and self.turnPlayer == "b"):
+                
+                # check if that square is empty
+                if self.board[row+2*u][col] == "em":
+                    
+                    # add moving 2 squares forward as a legal move
+                    moves.append(Move((row, col), (row+2*u, col), self.board))
+            
+        # make sure the pawn isn't in the far left column to avoid errors
+        if col - 1 >= 0:
+       
+                # check if the forward diagonally to the left square contains an enemy piece
+                if self.board[row+u][col-1][0] != self.turnPlayer:
+                    
+                    # add capturing that piece as a legal move
+                    moves.append(Move((row, col), (row+u, col-1), self.board))
+                    
+        # make sure the pawn isn't in the far right column to avoid errors
+        if col + 1 <= 7:
+            
+                # check if the forward diagonally to the right square contains an enemy piece
+                if self.board[row+u][col+1][0] != self.turnPlayer:
+                    
+                    # add capturing that piece as a legal move
+                    moves.append(Move((row, col), (row+u, col+1), self.board))
+                    
     
     def rookMoveLogic(self, row: int, col: int, moves: list):
-        pass    
+        """
+        Calculates all moves a rook on a given row and column can make.
+        """
+        
+        
+            
     
     
     def knightMoveLogic(self, row: int, col: int, moves: list):
-        pass
-    
+        """
+        Calculates all moves a knight on a given row and column can make.
+        """
+        
+        coordinateChange = [(2, 1), (-2, 1), (2, -1), (-2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2)]
+        
+        # check all knight moves
+        for c in coordinateChange:
+            
+            # destination coordinates of the move
+            destRow = row + c[0]
+            destCol = col + c[1]
+            
+            # make sure the destination is a square on the board
+            if 0 <= destRow <= 7 and 0 <= destCol <= 7:
+                
+                # check if that square contains an allied piece
+                if self.board[destRow][destCol][0] != self.turnPlayer:
+                    
+                    # add moving to that square (empty or contains enemy piece)
+                    moves.append(Move((row, col), (destRow, destCol), self.board))
+        
     
     def bishopMoveLogic(self, row: int, col: int, moves: list):
+        """
+        Calculates all moves a bishop on a given row and column can make.
+        """        
+        
         pass
     
     
     def queenMoveLogic(self, row: int, col: int, moves: list):
+        """
+        Calculates all moves a queen on a given row and column can make.
+        """        
+        
         pass
     
     
     def kingMoveLogic(self, row: int, col: int, moves: list):
+        """
+        Calculates all moves a king on a given row and column can make.
+        """        
+        
         pass
     
     
@@ -169,8 +248,6 @@ class Move():
         self.moveID = self.movedPiece + str(self.startRow) + str(self.startCol) \
                       + str(self.destinationRow) + str(self.destinationCol) \
                       + self.capturedPiece
-        
-        print(self.moveID)
             
     def __eq__(self, other):
         """
