@@ -41,6 +41,12 @@ def main():
     # generate a GameState object
     gamestate = engine.GameState()
     
+    # list that will store the legal moves
+    legalMoves = gamestate.generateLegalMoves()
+    
+    # flag for when a move was made to avoid generating legal moves every frame
+    newGameState = False
+    
     # load the pieces into memory
     IMG = graphics.loadPieceImages()
     
@@ -76,26 +82,50 @@ def main():
                 # check if click is inside the chess board
                 elif mouseClick[0] in range(8) and mouseClick[1] in range(8):
                     
+                    # save coordinates of the click
                     selectedSquare = mouseClick
                     moveCoordinates.append(reversed(selectedSquare))
                 
                 # move piece if 2 clicks in different squares were made
                 if len(moveCoordinates) == 2:
                     
+                    # generate a move object with the inputs
                     move = engine.Move(moveCoordinates[0], moveCoordinates[1], gamestate.board)
-                    gamestate.performMove(move)
                     
+                    # check of the move complies with the rules
+                    if move in legalMoves: 
+                        
+                        # perform the move
+                        gamestate.performMove(move)
+                        
+                        # set flag to true to generate new legal moves
+                        newGameState = True
+                                                
+                    # unselected everything again
                     selectedSquare = ()
                     moveCoordinates = []
         
             # key presses
             if event.type == p.KEYDOWN:
                 
-                # undo moves
+                # u is the hotkey
                 if event.key == p.K_u:
+                    
+                    # undo the move
                     gamestate.undoMove()
-                                
+                    
+                    # set flag to true to generate legal moves again
+                    newGameState = True
         
+        # check if the game state has changed
+        if newGameState == True:
+            
+            # generate new set of legal moves
+            legalMoves = gamestate.generateLegalMoves()
+            
+            # set flag back to false
+            newGameState = False
+            
         # update the graphics
         graphics.drawGameState(window, gamestate, SQUARE_SIZE, BORDERS, DIM, IMG)
     
