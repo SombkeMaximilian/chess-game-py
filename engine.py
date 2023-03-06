@@ -35,6 +35,11 @@ class GameState():
             ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
             ]
+        
+        # keeps track of which rooks can still be used for castling
+        self.whiteCastling = [True, True]
+        self.blackCastling = [True, True]
+        
         self.players = ["w", "b"]
         self.turnPlayer = "w"
         self.moveLog = []
@@ -174,9 +179,14 @@ class GameState():
         Calculates all moves a rook on a given row and column can make.
         """
         
-        
+        # idea: check all directions using unit vectors in orthogonal directions
+        # and adding multiples of one to the starting position until either an
+        # enemy or a friendly piece is found. add all empty squares on the way
+        # as legal moves and, if the first piece in a direction is an enemy
+        # piece, add that as well.
             
-    
+        pass
+
     
     def knightMoveLogic(self, row: int, col: int, moves: list):
         """
@@ -207,6 +217,8 @@ class GameState():
         Calculates all moves a bishop on a given row and column can make.
         """        
         
+        # same idea as rook but with diagonal unit vectors instead
+        
         pass
     
     
@@ -215,6 +227,9 @@ class GameState():
         Calculates all moves a queen on a given row and column can make.
         """        
         
+        # simply use rook and bishop logic, since the queen is a piece that
+        # "combines" those 2 
+        
         pass
     
     
@@ -222,6 +237,8 @@ class GameState():
         """
         Calculates all moves a king on a given row and column can make.
         """        
+        
+        # same idea as knight, perhaps it can be optimized?
         
         pass
     
