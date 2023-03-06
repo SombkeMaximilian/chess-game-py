@@ -44,7 +44,16 @@ class GameState():
         self.turnPlayer = "w"
         self.moveLog = []
         
+    
+    def switchTurn(self):
+        """
+        Changes the turn player.
+        """
         
+        self.turnPlayer = [player for player in self.players 
+                           if player != self.turnPlayer][0]
+        
+    
     def performMove(self, Move):
         """
         Alters the board to reflect a performed move and changes turn player.
@@ -58,8 +67,7 @@ class GameState():
         self.moveLog.append(Move)
         
         # change the turn player
-        self.turnPlayer = [player for player in self.players 
-                           if player != self.turnPlayer][0]
+        self.switchTurn()
         
     
     def undoMove(self):
@@ -79,8 +87,7 @@ class GameState():
             self.board[lastMove.destinationRow][lastMove.destinationCol] = lastMove.capturedPiece
             
             # change the turn player back
-            self.turnPlayer = [player for player in self.players 
-                               if player != self.turnPlayer][0]
+            self.switchTurn()
     
     def generateLegalMoves(self):
         """

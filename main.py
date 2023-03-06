@@ -90,7 +90,7 @@ def main():
                 if len(moveCoordinates) == 2:
                     
                     # generate a move object with the inputs
-                    move = engine.Move(moveCoordinates[0], moveCoordinates[1], gamestate.board)
+                    move = engine.Move(*moveCoordinates, gamestate.board)
                     
                     # check of the move complies with the rules
                     if move in legalMoves: 
