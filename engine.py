@@ -179,14 +179,41 @@ class GameState():
         Calculates all moves a rook on a given row and column can make.
         """
         
-        # idea: check all directions using unit vectors in orthogonal directions
-        # and adding multiples of one to the starting position until either an
-        # enemy or a friendly piece is found. add all empty squares on the way
-        # as legal moves and, if the first piece in a direction is an enemy
-        # piece, add that as well.
+        unitVectors = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        
+        # check each direction
+        for u in unitVectors:
             
-        pass
-
+            destRow = row + u[0]
+            destCol = col + u[1]
+            
+            # keep going in that direction until the end of the board at most
+            while 0 <= destRow <= 7 and 0 <= destCol <= 7:
+                
+                # check for empty squares along the way
+                if self.board[destRow][destCol] == "em":
+                    
+                    # add all of those as legal moves
+                    moves.append(Move((row, col), (destRow, destCol), self.board))
+                
+                # check for enemy pieces along the way
+                elif self.board[destRow][destCol][0] != self.turnPlayer:
+                    
+                    # add capturing that piece as a legal move
+                    moves.append(Move((row, col), (destRow, destCol), self.board))
+                    
+                    # rooks cannot jump over other pieces
+                    break
+                
+                # neither empty nor an enemy piece, it's an allied piece
+                else:
+                    
+                    # rooks cannot jump over other pieces
+                    break
+                
+                destRow += u[0]
+                destCol += u[1]
+                
     
     def knightMoveLogic(self, row: int, col: int, moves: list):
         """
@@ -217,9 +244,40 @@ class GameState():
         Calculates all moves a bishop on a given row and column can make.
         """        
         
-        # same idea as rook but with diagonal unit vectors instead
+        unitVectors = [(1, 1), (-1, 1), (1, -1), (-1, -1)]
         
-        pass
+        # check each direction
+        for u in unitVectors:
+            
+            destRow = row + u[0]
+            destCol = col + u[1]
+            
+            # keep going in that direction until the end of the board at most
+            while 0 <= destRow <= 7 and 0 <= destCol <= 7:
+                
+                # check for empty squares along the way
+                if self.board[destRow][destCol] == "em":
+                    
+                    # add all of those as legal moves
+                    moves.append(Move((row, col), (destRow, destCol), self.board))
+                
+                # check for enemy pieces along the way
+                elif self.board[destRow][destCol][0] != self.turnPlayer:
+                    
+                    # add capturing that piece as a legal move
+                    moves.append(Move((row, col), (destRow, destCol), self.board))
+                    
+                    # rooks cannot jump over other pieces
+                    break
+                
+                # neither empty nor an enemy piece, it's an allied piece
+                else:
+                    
+                    # rooks cannot jump over other pieces
+                    break
+                
+                destRow += u[0]
+                destCol += u[1]
     
     
     def queenMoveLogic(self, row: int, col: int, moves: list):
