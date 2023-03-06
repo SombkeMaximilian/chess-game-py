@@ -227,10 +227,9 @@ class GameState():
         Calculates all moves a queen on a given row and column can make.
         """        
         
-        # simply use rook and bishop logic, since the queen is a piece that
-        # "combines" those 2 
-        
-        pass
+        # a queen can make exactly the moves both a rook and bishop can make
+        self.rookMoveLogic(row, col, moves)
+        self.bishopMoveLogic(row, col, moves)
     
     
     def kingMoveLogic(self, row: int, col: int, moves: list):
@@ -238,9 +237,23 @@ class GameState():
         Calculates all moves a king on a given row and column can make.
         """        
         
-        # same idea as knight, perhaps it can be optimized?
+        coordinateChange = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)]
         
-        pass
+        # check all king moves
+        for c in coordinateChange:
+            
+            # destination coordinates of the move
+            destRow = row + c[0]
+            destCol = col + c[1]
+            
+            # make sure the destination is a square on the board
+            if 0 <= destRow <= 7 and 0 <= destCol <= 7:
+                
+                # check if that square contains an allied piece
+                if self.board[destRow][destCol][0] != self.turnPlayer:
+                    
+                    # add moving to that square (empty or contains enemy piece)
+                    moves.append(Move((row, col), (destRow, destCol), self.board))
     
     
 class Move():
