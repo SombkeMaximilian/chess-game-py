@@ -3,8 +3,8 @@
 class GameState():
     
     """
-    This class stores all the information about the game state. Legal moves, the board, a log of 
-    moves, whose turn it is, etc.
+    This class stores all the information about the game state. Legal moves, 
+    the board, a log of moves, whose turn it is, etc.
     """
     
     def __init__(self):
@@ -207,6 +207,11 @@ class Board():
     
     def addPieces(self, pieces):
         
+        """
+        Adds a list of piece objects to the board, maybe useful for loading
+        chess puzzles in the future.
+        """
+        
         for piece in pieces:
             
             self.matrix[piece.row][piece.col] = piece
@@ -240,6 +245,10 @@ class Board():
     
     def isEmpty(self, row, col):
         
+        """
+        Check if the square at (row, col) is unoccupied.
+        """
+        
         return self.matrix[row][col] == None
     
     
@@ -261,7 +270,7 @@ class Board():
     def isAlly(self, row, col, player):
         
         """
-        Check if the square at (row, col) is occupied by an allied piece
+        Check if the square at (row, col) is occupied by an allied piece.
         """
         
         if self.isEmpty(row, col):
@@ -346,7 +355,7 @@ class Piece():
         self.row = move.startRow
         self.col = move.startCol
         self.hasMoved = not move.firstMove
-        
+    
 
 class Pawn(Piece):
     
@@ -440,7 +449,7 @@ class Rook(Piece):
                     break
                 
                 destRow += u[0]
-                destCol += u[1]  
+                destCol += u[1]
 
         return
 
