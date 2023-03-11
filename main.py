@@ -120,6 +120,7 @@ def main():
     
     
 if __name__ == "__main__":
+    
     """
     Global variables for displaying the chess board.
     WIDTH and HEIGHT of the board, possibly allow the user to change this later.
@@ -129,6 +130,7 @@ if __name__ == "__main__":
     FPS the game runs at, possibly allow the user to change this later.
     Image names of the pieces will be kept in the dictionary IMG.
     """
+    
     WIDTH = HEIGHT = 512
     BORDERS = 200
     DIM = 8

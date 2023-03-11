@@ -59,15 +59,14 @@ class GameState():
         blackPawn8 = Pawn("Pawn", 1, 7, "black")
         
         self.activePieces["black"] = [
-            blackRook1, blackRook2,
-            blackKnight1, blackKnight2,
-            blackBishop1, blackBishop2,
-            blackQueen, blackKing,
+            blackRook1, blackRook2, blackKnight1, blackKnight2,
+            blackBishop1, blackBishop2, blackQueen, blackKing,
             blackPawn1, blackPawn2, blackPawn3, blackPawn4,
             blackPawn5, blackPawn6, blackPawn7, blackPawn8
             ]
         
         self.board.addPieces(self.activePieces["white"] + self.activePieces["black"])
+    
     
     def switchTurn(self):
         
@@ -131,6 +130,7 @@ class GameState():
 
             # change the turn player back
             self.switchTurn()
+    
     
     def generateLegalMoves(self):
         
