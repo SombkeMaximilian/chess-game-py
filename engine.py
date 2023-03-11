@@ -65,6 +65,7 @@ class GameState():
             blackPawn5, blackPawn6, blackPawn7, blackPawn8
             ]
         
+        self.kings = {"white": whiteKing, "black": blackKing}
         self.board.addPieces(self.activePieces["white"] + self.activePieces["black"])
     
     
@@ -138,6 +139,7 @@ class GameState():
         Filter out the moves that cannot be made, for example because a move
         would leave the turn player in check afterwards.
         """
+
         return self.generateAllMoves()
     
     
@@ -310,14 +312,15 @@ class Move():
         
     def __eq__(self, other):
         
-        # make sure it only compares to other Move objects.
+        # make sure it only compares to other Move objects
         if isinstance(other, Move):
             
             # compare the information
             return self.moveID == other.moveID
         
-        return False
-
+        else:
+            
+            raise TypeError("Comparison between move and " + type(other) + " not supported.")
 
 class Piece():
     
@@ -587,6 +590,12 @@ class Knight(Piece):
 
 class King(Piece):
     
+    def __init__(self, pieceType, row, col, player):
+        
+        super().__init__(pieceType, row, col, player)
+        self.inCheck = False
+        
+    
     def appendMoves(self, board, moves):
         
         """
@@ -613,4 +622,3 @@ class King(Piece):
                     moves.append(Move((self.row, self.col), (destRow, destCol), board))
                     
         return
-        
