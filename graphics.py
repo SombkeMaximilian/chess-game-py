@@ -45,12 +45,12 @@ def drawGameState(window, gamestate, SQUARE_SIZE: int, BORDERS: int, DIM: int, I
         for col in range(DIM):
             
             # the piece on the squares are stored as a list of rows
-            currentSquare = gamestate.board[row][col]
+            currentSquare = gamestate.board[row, col]
             
             # skip to the next iteration if the current square is supposed to be empty
-            if currentSquare == "em":
+            if currentSquare == None:
                 continue
             
             square = p.Rect(col*SQUARE_SIZE+BORDERS, row*SQUARE_SIZE+BORDERS, SQUARE_SIZE, SQUARE_SIZE)
-            piece = p.transform.scale(IMG[currentSquare], (SQUARE_SIZE, SQUARE_SIZE))
+            piece = p.transform.scale(IMG[str(currentSquare)], (SQUARE_SIZE, SQUARE_SIZE))
             window.blit(piece, square)

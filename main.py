@@ -6,23 +6,6 @@ import math
 import engine
 import graphics
 
-"""
-Global variables for displaying the chess board.
-WIDTH and HEIGHT of the board, possibly allow the user to change this later.
-BORDERS around the board for extra features.
-DIM = Dimensions of the board is always 8.
-Each row and column has 8 squares of size SQUARE_SIZE.
-FPS the game runs at, possibly allow the user to change this later.
-Image names of the pieces will be kept in the dictionary IMG.
-"""
-
-WIDTH = HEIGHT = 512
-BORDERS = 200
-DIM = 8
-SQUARE_SIZE = int(WIDTH / DIM)
-FPS = 30
-IMG = {}
-
 
 def main():
     """
@@ -137,4 +120,20 @@ def main():
     
     
 if __name__ == "__main__":
+    """
+    Global variables for displaying the chess board.
+    WIDTH and HEIGHT of the board, possibly allow the user to change this later.
+    BORDERS around the board for extra features.
+    DIM = Dimensions of the board is always 8.
+    Each row and column has 8 squares of size SQUARE_SIZE.
+    FPS the game runs at, possibly allow the user to change this later.
+    Image names of the pieces will be kept in the dictionary IMG.
+    """
+    WIDTH = HEIGHT = 512
+    BORDERS = 200
+    DIM = 8
+    SQUARE_SIZE = int(WIDTH / DIM)
+    FPS = 30
+    IMG = {}
+    
     main()
