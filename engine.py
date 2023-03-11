@@ -291,10 +291,7 @@ class Move():
         self.capturedPiece = board[self.destinationRow, self.destinationCol]
         
         # is this the piece's first move (important for pawns, castling, ..)
-        if self.movedPiece.hasMoved == False:
-            self.firstMove = True
-        else:
-            self.firstMove = False
+        self.firstMove = not self.movedPiece.hasMoved
         
         # store all the information about the move for comparisons
         self.moveID = str(self.movedPiece) + str(self.startRow) + str(self.startCol) \
