@@ -131,8 +131,8 @@ if __name__ == "__main__":
     Image names of the pieces will be kept in the dictionary IMG.
     """
     
-    WIDTH = HEIGHT = 512
-    BORDERS = 200
+    WIDTH = HEIGHT = 400
+    BORDERS = 100
     DIM = 8
     SQUARE_SIZE = int(WIDTH / DIM)
     FPS = 30
