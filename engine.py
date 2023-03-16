@@ -359,6 +359,16 @@ class Piece():
         self.row = move.startRow
         self.col = move.startCol
         self.hasMoved = not move.firstMove
+        
+    
+    def linearMoves(self):
+        
+        pass
+    
+    
+    def coordinateMoves(self):
+        
+        pass
     
 
 class Pawn(Piece):
