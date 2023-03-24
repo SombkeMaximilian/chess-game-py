@@ -13,12 +13,13 @@ class GameState():
         self.players = ["white", "black"]
         self.turnPlayer = "white"
         self.moveLog = []
+        
         self.checkmate = False
         self.stalemate = False
         
         self.activePieces = {p : [] for p in self.players}
         self.capturedPieces = {p : [] for p in self.players}
-        self.promotedPawns = {p: [] for p in self.players}
+        self.promotedPawns = {p : [] for p in self.players}
         
         whiteRook1 = Rook(7, 0, "white")
         whiteRook2 = Rook(7, 7, "white")
@@ -103,12 +104,25 @@ class GameState():
         
         # update board
         self.board.updateMove(move)
-                
+        
         # if a piece was captured, remove it from the list of active pieces
         if move.capturedPiece != None:
             
             self.activePieces[move.capturedPiece.player].remove(move.capturedPiece)
             self.capturedPieces[move.capturedPiece.player].append(move.capturedPiece)
+        
+        # set en passant coordinates
+        if move.movedPiece.pieceType == "Pawn" and \
+           abs(move.startRow - move.destinationRow) == 2:
+            
+            if move.movedPiece.player == "white": 
+                d = -1
+            else:                                 
+                d = 1
+            self.board.enPassantCoordinates = (move.startRow + d, move.startCol)
+        
+        else:
+            self.board.enPassantCoordinates = ()
         
         # add the move to the log
         self.moveLog.append(move)
@@ -152,7 +166,13 @@ class GameState():
             
             self.activePieces[lastMove.capturedPiece.player].append(lastMove.capturedPiece)
             self.capturedPieces[lastMove.capturedPiece.player].remove(lastMove.capturedPiece)            
-
+            
+        # set en passant coordinates
+        if lastMove.movedPiece.pieceType == "Pawn" and \
+           abs(lastMove.startRow - lastMove.destinationRow) == 2:    
+               
+            self.board.enPassantCoordinates = ()
+               
         # change the turn player back
         self.switchTurn()
         
@@ -236,7 +256,7 @@ class GameState():
             
             self.checkmate = False
             self.stalemate = False
-        
+
         return moves
 
 
@@ -398,6 +418,7 @@ class Board():
             [None, None, None, None, None, None, None, None]
             ]
         
+        self.enPassantCoordinates = ()
     
     def __setitem__(self, index, value):
         
@@ -452,6 +473,8 @@ class Board():
         
         self.matrix[move.startRow][move.startCol] = None
         self.matrix[move.destinationRow][move.destinationCol] = move.movedPiece
+        if move.isEnPassant:
+            self.matrix[move.capturedPiece.row][move.capturedPiece.col] = None
         
         return
     
@@ -463,8 +486,13 @@ class Board():
         """
         
         self.matrix[move.startRow][move.startCol] = move.movedPiece
-        self.matrix[move.destinationRow][move.destinationCol] = move.capturedPiece
-    
+        if not move.isEnPassant:
+            self.matrix[move.destinationRow][move.destinationCol] = move.capturedPiece
+        else:
+            self.enPassantCoordinates = (move.destinationRow, move.destinationCol)
+            self.matrix[move.destinationRow][move.destinationCol] = None
+            self.matrix[move.capturedPiece.row][move.capturedPiece.col] = move.capturedPiece
+        
         return
     
     
@@ -515,7 +543,9 @@ class Move():
     if any.
     """
     
-    def __init__(self, start, destination, board, pawnpromotion = False):
+    def __init__(self, start, destination, board, 
+                 pawnpromotion = False,
+                 enpassant = False):
                 
         # store start position and destination
         self.startRow, self.startCol = start
@@ -525,22 +555,33 @@ class Move():
         self.movedPiece = board[self.startRow, self.startCol]
         self.capturedPiece = board[self.destinationRow, self.destinationCol]
         
-        # pawn promotion information
+        # pawn promotion
         self.isPawnPromotion = pawnpromotion
+        
+        # en passant
+        self.isEnPassant = enpassant
+        
+        if self.isEnPassant: 
+            
+            if self.movedPiece.player == "white": 
+                d = -1
+            else:                                 
+                d = 1
+            
+            self.capturedPiece = board[self.destinationRow - d, self.destinationCol]
         
         # is this the piece's first move (important for pawns, castling, ..)
         if self.movedPiece != None:
             self.firstMove = not self.movedPiece.hasMoved
         
         # store all the information about the move for comparisons and output
-        self.moveID = str(self.movedPiece) + str(self.startRow) + str(self.startCol) \
-                      + str(self.destinationRow) + str(self.destinationCol) \
-                      + str(self.capturedPiece)
+        self.moveID = str(self.startRow) + str(self.startCol) \
+                      + str(self.destinationRow) + str(self.destinationCol)
     
     
     def __str__(self):
         
-        return self.moveID
+        return str(self.movedPiece) + self.moveID + str(self.capturedPiece)
     
     
     def __eq__(self, other):
@@ -691,8 +732,10 @@ class Pawn(Piece):
         super().__init__("Pawn", row, col, player)
         
         # pawn move direction (white up, black down)
-        if self.player == "white" : d = -1
-        else :                      d = 1
+        if self.player == "white": 
+            d = -1
+        else:                      
+            d = 1
         
         self.relativeCoordinates = [(d, 1), (d, -1)]  # capturing
         self.peaceful = (d, 0)                        # non-capturing
@@ -751,14 +794,16 @@ class Pawn(Piece):
             if 0 <= destRow <= 7 and 0 <= destCol <= 7:
                 
                 # check if that square contains an enemy piece
-                if board.isEnemy(destRow, destCol, self.player):
+                if board.isEnemy(destRow, destCol, self.player) or \
+                   board.enPassantCoordinates == (destRow, destCol):
                     
                     # add moving to that square
                     moves.append(Move((self.row, self.col), 
                                       (destRow, destCol), 
                                       board,
-                                      pawnpromotion))
-        
+                                      pawnpromotion,
+                                      board.enPassantCoordinates == (destRow, destCol)))
+                    
         return
     
     
