@@ -136,13 +136,71 @@ class GameState():
     def generateLegalMoves(self):
         
         """
-        Filter out the moves that cannot be made, for example because a move
-        would leave the turn player in check afterwards.
+        Generates all the moves the turn player can make while accounting
+        for checks.
         """
+        
+        moves = []
+        
+        checks = self.getChecksAndSetPins()
+        print(checks)
+        
+        if self.kings[self.turnPlayer].inCheck == True:
+            
+            # 1 check still allows other pieces to make moves
+            if len(checks) == 1:
+            
+                # generate all moves first
+                moves = self.generateAllMoves()
+                
+                # non-king pieces can only move to these coordinates
+                validSquares = []
+                
+                checkingPiece = checks[0][0]
+                checkDirection = checks[0][1]
+                
+                # if a non-king piece moves, it must capture checking knight
+                if checkingPiece.pieceType == "Knight":
+            
+                    validSquares = [(checkingPiece.row, checkingPiece.col)]
+                    
+                # pieces other than knights can be blocked or captured
+                else:
+                    
+                    row = self.kings[self.turnPlayer].row
+                    col = self.kings[self.turnPlayer].col
+                    
+                    # squares to block the check or capture attacking piece
+                    while row != checkingPiece.row or col != checkingPiece.col:
+                        
+                        row += checkDirection[0]
+                        col += checkDirection[1]
+                        
+                        validSquares.append((row, col))
+                
+                # remove all moves of other pieces that do not get the king out of check
+                for i in range(len(moves) - 1, -1, -1):
+                    
+                    if moves[i].movedPiece.pieceType != "King":
+                        
+                        if not (moves[i].destinationRow, moves[i].destinationCol) in validSquares:
+                            
+                            moves.pop(i)
+                
+            # more than 1 check can only be dealt with by moving the king
+            else:
+                
+                self.kings[self.turnPlayer].appendMoves(self.board, moves)
 
-        return self.generateAllMoves()
-    
-    
+        # king is not in check, all moves are allowed
+        else:
+            
+            moves = self.generateAllMoves()
+            
+        
+        return moves
+
+
     def generateAllMoves(self):
         
         """
@@ -158,9 +216,17 @@ class GameState():
             piece.appendMoves(self.board, moves)
                 
         return moves
-       
     
-    def getPinsAndChecks(self):
+    
+    def getChecksAndSetPins(self):
+        
+        """
+        Function that looks for any pins and checks of the turn player. First
+        check in all linear directions away from the king to cover attack 
+        directions of all normal pieces, then check separately for knights.
+        Returns a list of tuples containing the checking piece as well as the
+        direction it's checking the king from.
+        """
         
         # all directions from which a Rook, Bishop or Queen could attack
         unitVectors = [(1, 0), (-1, 0), (0, 1), (0, -1),  
@@ -171,8 +237,11 @@ class GameState():
         knightCoordinates = [(2, 1), (-2, 1), (2, -1), (-2, -1), 
                              (1, 2), (1, -2), (-1, 2), (-1, -2)]
         
-        pins = []
         checks = []
+        
+        # reset all pins
+        for piece in self.activePieces[self.turnPlayer]:
+            piece.resetPin()
         
         self.kings[self.turnPlayer].inCheck = False
         row = self.kings[self.turnPlayer].row
@@ -181,7 +250,7 @@ class GameState():
         # check in all directions away from the king
         for u in unitVectors:
             
-            possiblePin = ()
+            possiblePin = None
             distanceFromKing = 1
             currRow = row + u[0]
             currCol = col + u[1]
@@ -192,12 +261,15 @@ class GameState():
                 # check if there is an allied piece on that square
                 if self.board.isAlly(currRow, currCol, self.turnPlayer):
                     
-                    # temporarily assign that piece as pinned, verify later
+                    # no possible pin yet
                     if not possiblePin:
-                        possiblePin = (currRow, currCol, u)
+                        
+                        # piece might be pinned
+                        possiblePin = self.board[currRow, currCol]
                     
                     # 2 allied pieces, no pin or check in that direction
                     else:
+                        
                         break
                 
                 # check if there is an enemy piece on that square
@@ -209,12 +281,15 @@ class GameState():
                         
                         # no allied piece is blocking the enemy sliding piece
                         if not possiblePin:
-                            self.kings[self.turnPlayer].inCheck = True
-                            checks.append((currRow, currCol, u))
                             
-                        # allied piece is blocking, it is now pinned
+                            checks.append((self.board[currRow, currCol], u))
+                            break
+                            
+                        # allied piece is blocking the check, it is now pinned
                         else:
-                            pins.append(possiblePin)
+                            
+                            possiblePin.pinned = True
+                            possiblePin.pinDirection = u
                             break
                     
                     # check if there is a king or pawn that can attack the turn
@@ -223,24 +298,41 @@ class GameState():
                     elif (-u[0], -u[1]) in self.board[currRow, currCol].relativeCoordinates and \
                          distanceFromKing == 1:
                          
-                        self.kings[self.turnPlayer].inCheck = True
-                        checks.append((currRow, currCol, u))
-                
+                        checks.append((self.board[currRow, currCol], u))
+                        break
+                    
+                    # enemy pieces beyond the first in that direction are blocked
+                    else:
+                        break
+                    
                 distanceFromKing += 1
                 currRow += u[0]
-                currCol += u[1]   
+                currCol += u[1]
     
     
-        # knights are special, they can't pin other pieces
+        # knights move in a special pattern, they also can't pin other pieces
         for k in knightCoordinates:
             
             currRow = row + k[0]
             currCol = col + k[1]
             
-            if self.board[currRow, currCol].pieceType == "Knight":
-                checks.append((currRow, currCol, k))
+            # make sure it's a square on the board
+            if 0 <= currRow <= 7 and 0 <= currCol <= 7:
                 
-        return checks, pins
+                # check if it's an enemy piece
+                if self.board.isEnemy(currRow, currCol, self.turnPlayer):    
+                    
+                    # check if it's a knight
+                    if self.board[currRow, currCol].pieceType == "Knight":
+                        
+                        checks.append((self.board[currRow, currCol], k))
+        
+        if checks: 
+            
+            self.kings[self.turnPlayer].inCheck = True
+        
+        return checks
+    
     
 class Board():
     
@@ -416,9 +508,11 @@ class Piece():
         self.player = player
         self.hasMoved = False
         
-        # for checking how a piece can move/attack
         self.unitVectors = []
         self.relativeCoordinates = []
+    
+        self.pinned = False
+        self.pinDirection = ()
     
     def __str__(self):
         
@@ -457,6 +551,10 @@ class Piece():
         
         # check each direction
         for u in self.unitVectors:
+            
+            # pinned sliding pieces can only move along the line of the pin
+            if self.pinned and self.pinDirection != u and self.pinDirection != (-u[0], -u[1]):
+                continue
             
             destRow = self.row + u[0]
             destCol = self.col + u[1]
@@ -499,6 +597,10 @@ class Piece():
         
         moves = []
         
+        # pinned knight can never move, king cannot be pinned
+        if self.pinned:
+            return moves
+        
         # check all relative coordinates
         for c in relativeCoordinates:
             
@@ -517,6 +619,12 @@ class Piece():
         
         return moves
     
+    
+    def resetPin(self):
+        
+        self.pinned = False
+        self.pinDirection = ()
+    
 
 class Pawn(Piece):
     
@@ -524,11 +632,12 @@ class Pawn(Piece):
         
         super().__init__("Pawn", row, col, player)
         
-        # relative coordinates the pawn can attack, used for checks
-        if self.player == "white":
-            self.relativeCoordinates = [(-1, 1), (-1, -1)]
-        elif self.player == "black":
-            self.relativeCoordinates = [(1, 1), (1, -1)]
+        # pawn move direction (white up, black down)
+        if self.player == "white" : d = -1
+        else :                      d = 1
+        
+        self.relativeCoordinates = [(d, 1), (d, -1)]  # capturing
+        self.peaceful = (d, 0)                        # non-capturing
         
     
     def appendMoves(self, board, moves):
@@ -537,47 +646,55 @@ class Pawn(Piece):
         Appends all moves the pawn can make from its current position on the
         board to the list moves.
         """
-
-        # white pawns move up, black pawns move down
-        if self.player == "white":
-            u = -1
-        elif self.player == "black":
-            u = 1
         
-        # check if the square in front is empty
-        if board.isEmpty(self.row + u, self.col):
+        u = self.peaceful[0]
+        
+        # pinned pawn can only move along the line of the pin
+        if not self.pinned or self.pinDirection == self.peaceful or \
+            self.pinDirection == (-self.peaceful[0], self.peaceful[1]):
             
-            # add moving 1 square forward as a legal move
-            moves.append(Move((self.row, self.col), (self.row+u, self.col), board))
-            
-            # pawns can move 2 squares if they haven't moved yet
-            if not self.hasMoved:
-                   
-                   # check if that square is empty
-                   if board.isEmpty(self.row + 2 * u, self.col):
+            # check if the square in front is empty
+            if board.isEmpty(self.row + u, self.col):
+                
+                # add moving 1 square forward as a legal move
+                moves.append(Move((self.row, self.col), 
+                                  (self.row+u, self.col), 
+                                  board))
+                
+                # pawns can move 2 squares if they haven't moved yet
+                if not self.hasMoved:
                        
-                       # add moving 2 squares forward as a legal move
-                       moves.append(Move((self.row, self.col), (self.row+2*u, self.col), board))
+                       # check if that square is empty
+                       if board.isEmpty(self.row + 2 * u, self.col):
+                           
+                           # add moving 2 squares forward as a legal move
+                           moves.append(Move((self.row, self.col), 
+                                             (self.row+2*u, self.col), 
+                                             board))
     
-        # make sure the pawn isn't in the far left column to avoid errors
-        if self.col - 1 >= 0:
-       
-                # check if the forward diagonally to the left square contains an enemy piece
-                if board.isEnemy(self.row+u, self.col-1, self.player):
-                    
-                    # add capturing that piece as a legal move
-                    moves.append(Move((self.row, self.col), (self.row+u, self.col-1), board))
-                    
-        # make sure the pawn isn't in the far right column to avoid errors
-        if self.col + 1 <= 7:
+        
+        # check the capture squares
+        for c in self.relativeCoordinates:
             
-                # check if the forward diagonally to the right square contains an enemy piece
-                if board.isEnemy(self.row+u, self.col+1, self.player):
+            # pinned pawns can only capture the pinning piece
+            if self.pinned and self.pinDirection != c:
+                continue
+            
+            # destination coordinates of the move
+            destRow = self.row + c[0]
+            destCol = self.col + c[1]
+            
+            # make sure the destination is a square on the board
+            if 0 <= destRow <= 7 and 0 <= destCol <= 7:
+                
+                # check if that square doesn't contain an allied piece
+                if board.isEnemy(destRow, destCol, self.player):
                     
-                    # add capturing that piece as a legal move
-                    moves.append(Move((self.row, self.col), (self.row+u, self.col+1), board))
+                    # add moving to that square
+                    moves.append(Move((self.row, self.col), (destRow, destCol), board))
         
         return
+    
     
 class Rook(Piece):
     
@@ -656,7 +773,7 @@ class Knight(Piece):
         Appends all moves the knight can make from its current position on the
         board to the list moves.
         """
-        
+    
         moves += self.singleCoordinateMoves(board, self.relativeCoordinates)
                     
         return
