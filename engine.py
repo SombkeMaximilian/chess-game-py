@@ -18,6 +18,7 @@ class GameState():
         
         self.activePieces = {p : [] for p in self.players}
         self.capturedPieces = {p : [] for p in self.players}
+        self.promotedPawns = {p: [] for p in self.players}
         
         whiteRook1 = Rook(7, 0, "white")
         whiteRook2 = Rook(7, 7, "white")
@@ -91,6 +92,16 @@ class GameState():
         # update information of the piece
         move.movedPiece.movePiece(move)
         
+        # promote pawn if necessary
+        if move.isPawnPromotion:
+            
+            print(move.isPawnPromotion)
+            promotedPawn = Queen(move.destinationRow, move.destinationCol, move.movedPiece.player)
+            self.activePieces[move.movedPiece.player].append(promotedPawn)
+            self.activePieces[move.movedPiece.player].remove(move.movedPiece)
+            self.promotedPawns[move.movedPiece.player].append(move.movedPiece)
+            move.movedPiece = promotedPawn
+        
         # update board
         self.board.updateMove(move)
                 
@@ -106,6 +117,8 @@ class GameState():
         # change the turn player
         self.switchTurn()
         
+        return
+        
     
     def undoMove(self):
         
@@ -114,25 +127,38 @@ class GameState():
         """
         
         # check if there is a move to undo (log is not empty)
-        if self.moveLog:
+        if not self.moveLog:
+            return
             
-            # grab the last move and remove it from the log
-            lastMove = self.moveLog.pop(-1)
+        # get the last move and remove it from the log
+        lastMove = self.moveLog.pop(-1)
+        
+        # undo pawn promotion
+        if lastMove.isPawnPromotion:
             
-            # update information of the moved piece
-            lastMove.movedPiece.undoMovePiece(lastMove)
+            print(lastMove.isPawnPromotion)
+            pawn = self.promotedPawns[lastMove.movedPiece.player].pop()
+            promotedPawn = self.board[pawn.row, pawn.col]
+            self.activePieces[lastMove.movedPiece.player].remove(promotedPawn)
+            self.activePieces[lastMove.movedPiece.player].append(pawn)
+            lastMove.movedPiece = pawn
             
-            # update board
-            self.board.updateUndo(lastMove)
+        # update information of the moved piece
+        lastMove.movedPiece.undoMovePiece(lastMove)
+        
+        # update board
+        self.board.updateUndo(lastMove)
+        
+        # if a piece was captured, add it back to the active pieces
+        if lastMove.capturedPiece != None:
             
-            # if a piece was captured, add it back to the active pieces
-            if lastMove.capturedPiece != None:
-                
-                self.activePieces[lastMove.capturedPiece.player].append(lastMove.capturedPiece)
-                self.capturedPieces[lastMove.capturedPiece.player].remove(lastMove.capturedPiece)            
+            self.activePieces[lastMove.capturedPiece.player].append(lastMove.capturedPiece)
+            self.capturedPieces[lastMove.capturedPiece.player].remove(lastMove.capturedPiece)            
 
-            # change the turn player back
-            self.switchTurn()
+        # change the turn player back
+        self.switchTurn()
+        
+        return
     
     
     def generateLegalMoves(self):
@@ -286,8 +312,10 @@ class GameState():
                     # no possible pin yet
                     if not possiblePin:
                         
-                        # piece might be pinned
-                        possiblePin = self.board[currRow, currCol]
+                        # king moves are generated in a way that might make
+                        # the king protect itself, this prevents that
+                        if self.board[currRow, currCol].pieceType != "King":
+                            possiblePin = self.board[currRow, currCol]
                     
                     # 2 allied pieces, no pin or check in that direction
                     else:
@@ -489,8 +517,8 @@ class Move():
     if any.
     """
     
-    def __init__(self, start, destination, board):
-        
+    def __init__(self, start, destination, board, pawnpromotion = False):
+                
         # store start position and destination
         self.startRow, self.startCol = start
         self.destinationRow, self.destinationCol = destination
@@ -499,16 +527,24 @@ class Move():
         self.movedPiece = board[self.startRow, self.startCol]
         self.capturedPiece = board[self.destinationRow, self.destinationCol]
         
+        # pawn promotion information
+        self.isPawnPromotion = pawnpromotion
+        
         # is this the piece's first move (important for pawns, castling, ..)
         if self.movedPiece != None:
             self.firstMove = not self.movedPiece.hasMoved
         
-        # store all the information about the move for comparisons
+        # store all the information about the move for comparisons and output
         self.moveID = str(self.movedPiece) + str(self.startRow) + str(self.startCol) \
                       + str(self.destinationRow) + str(self.destinationCol) \
                       + str(self.capturedPiece)
     
+    
+    def __str__(self):
         
+        return self.moveID
+    
+    
     def __eq__(self, other):
         
         # make sure it only compares to other Move objects
@@ -520,6 +556,7 @@ class Move():
         else:
             
             raise TypeError("Comparison between move and " + type(other) + " not supported.")
+
 
 class Piece():
     
@@ -679,10 +716,13 @@ class Pawn(Piece):
             # check if the square in front is empty
             if board.isEmpty(self.row + u, self.col):
                 
+                pawnpromotion = self.row+u == 7 or self.row+u == 0
+                
                 # add moving 1 square forward as a legal move
                 moves.append(Move((self.row, self.col), 
                                   (self.row+u, self.col), 
-                                  board))
+                                  board, 
+                                  pawnpromotion))
                 
                 # pawns can move 2 squares if they haven't moved yet
                 if not self.hasMoved:
@@ -707,6 +747,8 @@ class Pawn(Piece):
             destRow = self.row + c[0]
             destCol = self.col + c[1]
             
+            pawnpromotion = self.row+u == 7 or self.row+u == 0
+            
             # make sure the destination is a square on the board
             if 0 <= destRow <= 7 and 0 <= destCol <= 7:
                 
@@ -714,7 +756,10 @@ class Pawn(Piece):
                 if board.isEnemy(destRow, destCol, self.player):
                     
                     # add moving to that square
-                    moves.append(Move((self.row, self.col), (destRow, destCol), board))
+                    moves.append(Move((self.row, self.col), 
+                                      (destRow, destCol), 
+                                      board,
+                                      pawnpromotion))
         
         return
     
