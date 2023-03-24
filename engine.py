@@ -119,6 +119,8 @@ class GameState():
                 d = -1
             else:                                 
                 d = 1
+                
+            move.currEnPassantCoordinates = self.board.enPassantCoordinates
             self.board.enPassantCoordinates = (move.startRow + d, move.startCol)
         
         else:
@@ -168,10 +170,7 @@ class GameState():
             self.capturedPieces[lastMove.capturedPiece.player].remove(lastMove.capturedPiece)            
             
         # set en passant coordinates
-        if lastMove.movedPiece.pieceType == "Pawn" and \
-           abs(lastMove.startRow - lastMove.destinationRow) == 2:    
-               
-            self.board.enPassantCoordinates = ()
+        self.board.enPassantCoordinates = lastMove.currEnPassantCoordinates
                
         # change the turn player back
         self.switchTurn()
@@ -560,6 +559,7 @@ class Move():
         
         # en passant
         self.isEnPassant = enpassant
+        self.currEnPassantCoordinates = ()
         
         if self.isEnPassant: 
             
