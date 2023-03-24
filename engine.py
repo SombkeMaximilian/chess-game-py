@@ -17,22 +17,22 @@ class GameState():
         self.activePieces = {p : [] for p in self.players}
         self.capturedPieces = {p : [] for p in self.players}
         
-        whiteRook1 = Rook("Rook", 7, 0, "white")
-        whiteRook2 = Rook("Rook", 7, 7, "white")
-        whiteKnight1 = Knight("Knight", 7, 1, "white")
-        whiteKnight2 = Knight("Knight", 7, 6, "white")
-        whiteBishop1 = Bishop("Bishop", 7, 5, "white")
-        whiteBishop2 = Bishop("Bishop", 7, 2, "white")
-        whiteQueen = Queen("Queen", 7, 3, "white")
-        whiteKing = King("King", 7, 4, "white")
-        whitePawn1 = Pawn("Pawn", 6, 0, "white")
-        whitePawn2 = Pawn("Pawn", 6, 1, "white")
-        whitePawn3 = Pawn("Pawn", 6, 2, "white")
-        whitePawn4 = Pawn("Pawn", 6, 3, "white")
-        whitePawn5 = Pawn("Pawn", 6, 4, "white")
-        whitePawn6 = Pawn("Pawn", 6, 5, "white")
-        whitePawn7 = Pawn("Pawn", 6, 6, "white")
-        whitePawn8 = Pawn("Pawn", 6, 7, "white")
+        whiteRook1 = Rook(7, 0, "white")
+        whiteRook2 = Rook(7, 7, "white")
+        whiteKnight1 = Knight(7, 1, "white")
+        whiteKnight2 = Knight(7, 6, "white")
+        whiteBishop1 = Bishop(7, 5, "white")
+        whiteBishop2 = Bishop(7, 2, "white")
+        whiteQueen = Queen(7, 3, "white")
+        whiteKing = King(7, 4, "white")
+        whitePawn1 = Pawn(6, 0, "white")
+        whitePawn2 = Pawn(6, 1, "white")
+        whitePawn3 = Pawn(6, 2, "white")
+        whitePawn4 = Pawn(6, 3, "white")
+        whitePawn5 = Pawn(6, 4, "white")
+        whitePawn6 = Pawn(6, 5, "white")
+        whitePawn7 = Pawn(6, 6, "white")
+        whitePawn8 = Pawn(6, 7, "white")
         
         self.activePieces["white"] = [
             whiteRook1, whiteRook2, whiteKnight1, whiteKnight2,
@@ -41,22 +41,22 @@ class GameState():
             whitePawn5, whitePawn6, whitePawn7, whitePawn8           
             ]
         
-        blackRook1 = Rook("Rook", 0, 0, "black")
-        blackRook2 = Rook("Rook", 0, 7, "black")
-        blackKnight1 = Knight("Knight", 0, 1, "black")
-        blackKnight2 = Knight("Knight", 0, 6, "black")
-        blackBishop1 = Bishop("Bishop", 0, 5, "black")
-        blackBishop2 = Bishop("Bishop", 0, 2, "black")
-        blackQueen = Queen("Queen", 0, 3, "black")
-        blackKing = King("King", 0, 4, "black")
-        blackPawn1 = Pawn("Pawn", 1, 0, "black")
-        blackPawn2 = Pawn("Pawn", 1, 1, "black")
-        blackPawn3 = Pawn("Pawn", 1, 2, "black")
-        blackPawn4 = Pawn("Pawn", 1, 3, "black")
-        blackPawn5 = Pawn("Pawn", 1, 4, "black")
-        blackPawn6 = Pawn("Pawn", 1, 5, "black")
-        blackPawn7 = Pawn("Pawn", 1, 6, "black")
-        blackPawn8 = Pawn("Pawn", 1, 7, "black")
+        blackRook1 = Rook(0, 0, "black")
+        blackRook2 = Rook(0, 7, "black")
+        blackKnight1 = Knight(0, 1, "black")
+        blackKnight2 = Knight(0, 6, "black")
+        blackBishop1 = Bishop(0, 5, "black")
+        blackBishop2 = Bishop(0, 2, "black")
+        blackQueen = Queen(0, 3, "black")
+        blackKing = King(0, 4, "black")
+        blackPawn1 = Pawn(1, 0, "black")
+        blackPawn2 = Pawn(1, 1, "black")
+        blackPawn3 = Pawn(1, 2, "black")
+        blackPawn4 = Pawn(1, 3, "black")
+        blackPawn5 = Pawn(1, 4, "black")
+        blackPawn6 = Pawn(1, 5, "black")
+        blackPawn7 = Pawn(1, 6, "black")
+        blackPawn8 = Pawn(1, 7, "black")
         
         self.activePieces["black"] = [
             blackRook1, blackRook2, blackKnight1, blackKnight2,
@@ -65,9 +65,9 @@ class GameState():
             blackPawn5, blackPawn6, blackPawn7, blackPawn8
             ]
         
-        self.kings = {"white": whiteKing, "black": blackKing}
         self.board.addPieces(self.activePieces["white"] + self.activePieces["black"])
-    
+        self.kings = {"white": whiteKing, "black": blackKing}
+        
     
     def switchTurn(self):
         
@@ -158,7 +158,89 @@ class GameState():
             piece.appendMoves(self.board, moves)
                 
         return moves
+       
     
+    def getPinsAndChecks(self):
+        
+        # all directions from which a Rook, Bishop or Queen could attack
+        unitVectors = [(1, 0), (-1, 0), (0, 1), (0, -1),  
+                       (1, 1), (-1, 1), (1, -1), (-1, -1)]
+        
+        
+        # all relative coordinates from which a knight could attack
+        knightCoordinates = [(2, 1), (-2, 1), (2, -1), (-2, -1), 
+                             (1, 2), (1, -2), (-1, 2), (-1, -2)]
+        
+        pins = []
+        checks = []
+        
+        self.kings[self.turnPlayer].inCheck = False
+        row = self.kings[self.turnPlayer].row
+        col = self.kings[self.turnPlayer].col
+        
+        # check in all directions away from the king
+        for u in unitVectors:
+            
+            possiblePin = ()
+            distanceFromKing = 1
+            currRow = row + u[0]
+            currCol = col + u[1]
+            
+            # keep going in that direction until the end of the board at most
+            while 0 <= currRow <= 7 and 0 <= currCol <= 7:
+                
+                # check if there is an allied piece on that square
+                if self.board.isAlly(currRow, currCol, self.turnPlayer):
+                    
+                    # temporarily assign that piece as pinned, verify later
+                    if not possiblePin:
+                        possiblePin = (currRow, currCol, u)
+                    
+                    # 2 allied pieces, no pin or check in that direction
+                    else:
+                        break
+                
+                # check if there is an enemy piece on that square
+                elif self.board.isEnemy(currRow, currCol, self.turnPlayer):
+                    
+                    # check if it's a sliding piece that can attack in this 
+                    # direction, negating the vector is not necessary (symmetry)
+                    if u in self.board[currRow, currCol].unitVectors:
+                        
+                        # no allied piece is blocking the enemy sliding piece
+                        if not possiblePin:
+                            self.kings[self.turnPlayer].inCheck = True
+                            checks.append((currRow, currCol, u))
+                            
+                        # allied piece is blocking, it is now pinned
+                        else:
+                            pins.append(possiblePin)
+                            break
+                    
+                    # check if there is a king or pawn that can attack the turn
+                    # player's king, negating the vector is necessary (pawns 
+                    # move only in one direction)
+                    elif (-u[0], -u[1]) in self.board[currRow, currCol].relativeCoordinates and \
+                         distanceFromKing == 1:
+                         
+                        self.kings[self.turnPlayer].inCheck = True
+                        checks.append((currRow, currCol, u))
+                
+                distanceFromKing += 1
+                currRow += u[0]
+                currCol += u[1]   
+    
+    
+        # knights are special, they can't pin other pieces
+        for k in knightCoordinates:
+            
+            currRow = row + k[0]
+            currCol = col + k[1]
+            
+            if self.board[currRow, currCol].pieceType == "Knight":
+                checks.append((currRow, currCol, k))
+                
+        return checks, pins
     
 class Board():
     
@@ -282,7 +364,8 @@ class Board():
         else:
             
             return self.matrix[row][col].player == player
-
+    
+    
 class Move():
     
     """
@@ -332,7 +415,10 @@ class Piece():
         self.col = col
         self.player = player
         self.hasMoved = False
-    
+        
+        # for checking how a piece can move/attack
+        self.unitVectors = []
+        self.relativeCoordinates = []
     
     def __str__(self):
         
@@ -361,17 +447,89 @@ class Piece():
         self.hasMoved = not move.firstMove
         
     
-    def linearMoves(self):
+    def slidingMoves(self, board, pattern):
         
-        pass
-    
-    
-    def coordinateMoves(self):
+        """
+        Blueprint for calculating moves of Rooks, Bishops and Queens.
+        """
         
-        pass
+        moves = []
+        
+        # check each direction
+        for u in self.unitVectors:
+            
+            destRow = self.row + u[0]
+            destCol = self.col + u[1]
+            
+            # keep going in that direction until the end of the board at most
+            while 0 <= destRow <= 7 and 0 <= destCol <= 7:
+                
+                # check for empty squares along the way
+                if board.isEmpty(destRow, destCol):
+                    
+                    # add all of those as legal moves
+                    moves.append(Move((self.row, self.col), (destRow, destCol), board))
+                
+                # check for enemy pieces along the way
+                elif board.isEnemy(destRow, destCol, self.player):
+                    
+                    # add capturing that piece as a legal move
+                    moves.append(Move((self.row, self.col), (destRow, destCol), board))
+                    
+                    # cannot jump over other pieces
+                    break
+                
+                # neither empty nor an enemy piece, it's an allied piece
+                else:
+                    
+                    # cannot jump over other pieces
+                    break
+                
+                destRow += u[0]
+                destCol += u[1]
+
+        return moves
+        
+    
+    def singleCoordinateMoves(self, board, relativeCoordinates):
+        
+        """
+        Blueprint for calculating moves of Knights and Kings.
+        """
+        
+        moves = []
+        
+        # check all relative coordinates
+        for c in relativeCoordinates:
+            
+            # destination coordinates of the move
+            destRow = self.row + c[0]
+            destCol = self.col + c[1]
+            
+            # make sure the destination is a square on the board
+            if 0 <= destRow <= 7 and 0 <= destCol <= 7:
+                
+                # check if that square doesn't contain an allied piece
+                if not board.isAlly(destRow, destCol, self.player):
+                    
+                    # add moving to that square
+                    moves.append(Move((self.row, self.col), (destRow, destCol), board))
+        
+        return moves
     
 
 class Pawn(Piece):
+    
+    def __init__(self, row, col, player):
+        
+        super().__init__("Pawn", row, col, player)
+        
+        # relative coordinates the pawn can attack, used for checks
+        if self.player == "white":
+            self.relativeCoordinates = [(-1, 1), (-1, -1)]
+        elif self.player == "black":
+            self.relativeCoordinates = [(1, 1), (1, -1)]
+        
     
     def appendMoves(self, board, moves):
         
@@ -423,149 +581,70 @@ class Pawn(Piece):
     
 class Rook(Piece):
     
+    def __init__(self, row, col, player):
+        
+        super().__init__("Rook", row, col, player)
+        self.unitVectors = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+
     def appendMoves(self, board, moves):
         
         """
         Appends all moves the rook can make from its current position on the
         board to the list moves.
         """
-        
-        unitVectors = [(1, 0), (-1, 0), (0, 1), (0, -1)]
-        
-        # check each direction
-        for u in unitVectors:
-            
-            destRow = self.row + u[0]
-            destCol = self.col + u[1]
-            
-            # keep going in that direction until the end of the board at most
-            while 0 <= destRow <= 7 and 0 <= destCol <= 7:
-                
-                # check for empty squares along the way
-                if board.isEmpty(destRow, destCol):
-                    
-                    # add all of those as legal moves
-                    moves.append(Move((self.row, self.col), (destRow, destCol), board))
-                
-                # check for enemy pieces along the way
-                elif board.isEnemy(destRow, destCol, self.player):
-                    
-                    # add capturing that piece as a legal move
-                    moves.append(Move((self.row, self.col), (destRow, destCol), board))
-                    
-                    # rooks cannot jump over other pieces
-                    break
-                
-                # neither empty nor an enemy piece, it's an allied piece
-                else:
-                    
-                    # rooks cannot jump over other pieces
-                    break
-                
-                destRow += u[0]
-                destCol += u[1]
+
+        moves += self.slidingMoves(board, self.unitVectors)
 
         return
 
 
 class Bishop(Piece):
-    
+
+    def __init__(self, row, col, player):
+        
+        super().__init__("Bishop", row, col, player)
+        self.unitVectors = [(1, 1), (-1, 1), (1, -1), (-1, -1)]
+
     def appendMoves(self, board, moves):
         
         """
         Appends all moves the bishop can make from its current position on the
         board to the list moves.
         """
-        
-        unitVectors = [(1, 1), (-1, 1), (1, -1), (-1, -1)]
-        
-        # check each direction
-        for u in unitVectors:
-            
-            destRow = self.row + u[0]
-            destCol = self.col + u[1]
-            
-            # keep going in that direction until the end of the board at most
-            while 0 <= destRow <= 7 and 0 <= destCol <= 7:
-                
-                # check for empty squares along the way
-                if board.isEmpty(destRow, destCol):
-                    
-                    # add all of those as legal moves
-                    moves.append(Move((self.row, self.col), (destRow, destCol), board))
-                
-                # check for enemy pieces along the way
-                elif board.isEnemy(destRow, destCol, self.player):
-                    
-                    # add capturing that piece as a legal move
-                    moves.append(Move((self.row, self.col), (destRow, destCol), board))
-                    
-                    # bishops cannot jump over other pieces
-                    break
-                
-                # neither empty nor an enemy piece, it's an allied piece
-                else:
-                    
-                    # bishops cannot jump over other pieces
-                    break
-                
-                destRow += u[0]
-                destCol += u[1]  
+
+        moves += self.slidingMoves(board, self.unitVectors)
 
         return
 
 
 class Queen(Piece):
+
+    def __init__(self, row, col, player):
+        
+        super().__init__("Queen", row, col, player)
+        self.unitVectors = [(1, 0), (-1, 0), (0, 1), (0, -1),
+                            (1, 1), (-1, 1), (1, -1), (-1, -1)]
     
     def appendMoves(self, board, moves):
         
         """
         Appends all moves the queen can make from its current position on the
-        board to the list moves. A queen can make all moves that a rook or a
-        bishop can make.
+        board to the list moves.
         """
-        
-        unitVectors = [(1, 0), (-1, 0), (0, 1), (0, -1),   # rook part
-                       (1, 1), (-1, 1), (1, -1), (-1, -1)] # bishop part
-        
-        # check each direction
-        for u in unitVectors:
-            
-            destRow = self.row + u[0]
-            destCol = self.col + u[1]
-            
-            # keep going in that direction until the end of the board at most
-            while 0 <= destRow <= 7 and 0 <= destCol <= 7:
-                
-                # check for empty squares along the way
-                if board.isEmpty(destRow, destCol):
-                    
-                    # add all of those as legal moves
-                    moves.append(Move((self.row, self.col), (destRow, destCol), board))
-                
-                # check for enemy pieces along the way
-                elif board.isEnemy(destRow, destCol, self.player):
-                    
-                    # add capturing that piece as a legal move
-                    moves.append(Move((self.row, self.col), (destRow, destCol), board))
-                    
-                    # queens cannot jump over other pieces
-                    break
-                
-                # neither empty nor an enemy piece, it's an allied piece
-                else:
-                    
-                    # queens cannot jump over other pieces
-                    break
-                
-                destRow += u[0]
-                destCol += u[1]  
+
+        moves += self.slidingMoves(board, self.unitVectors)
 
         return
 
 
 class Knight(Piece):
-    
+
+    def __init__(self, row, col, player):
+        
+        super().__init__("Knight", row, col, player)
+        self.relativeCoordinates = [(2, 1), (-2, 1), (2, -1), (-2, -1), 
+                                    (1, 2), (1, -2), (-1, 2), (-1, -2)]
+
     def __str__(self):
         
         return self.player[0] + "N"
@@ -578,34 +657,20 @@ class Knight(Piece):
         board to the list moves.
         """
         
-        coordinateChange = [(2, 1), (-2, 1), (2, -1), (-2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2)]
-        
-        # check all knight moves
-        for c in coordinateChange:
-            
-            # destination coordinates of the move
-            destRow = self.row + c[0]
-            destCol = self.col + c[1]
-            
-            # make sure the destination is a square on the board
-            if 0 <= destRow <= 7 and 0 <= destCol <= 7:
-                
-                # check if that square doesn't contain an allied piece
-                if not board.isAlly(destRow, destCol, self.player):
-                    
-                    # add moving to that square
-                    moves.append(Move((self.row, self.col), (destRow, destCol), board))
+        moves += self.singleCoordinateMoves(board, self.relativeCoordinates)
                     
         return
 
 
 class King(Piece):
     
-    def __init__(self, pieceType, row, col, player):
+    def __init__(self, row, col, player):
         
-        super().__init__(pieceType, row, col, player)
+        super().__init__("King", row, col, player)
+        self.relativeCoordinates = [(1, 0), (-1, 0), (0, 1), (0, -1), 
+                                    (1, 1), (1, -1), (-1, 1), (-1, -1)]
         self.inCheck = False
-        
+                
     
     def appendMoves(self, board, moves):
         
@@ -614,22 +679,6 @@ class King(Piece):
         board to the list moves.
         """
         
-        coordinateChange = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)]
-        
-        # check all knight moves
-        for c in coordinateChange:
-            
-            # destination coordinates of the move
-            destRow = self.row + c[0]
-            destCol = self.col + c[1]
-            
-            # make sure the destination is a square on the board
-            if 0 <= destRow <= 7 and 0 <= destCol <= 7:
-                
-                # check if that square doesn't contain an allied piece
-                if not board.isAlly(destRow, destCol, self.player):
-                    
-                    # add moving to that square
-                    moves.append(Move((self.row, self.col), (destRow, destCol), board))
+        moves += self.singleCoordinateMoves(board, self.relativeCoordinates)
                     
         return
