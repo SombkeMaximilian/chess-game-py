@@ -95,7 +95,6 @@ class GameState():
         # promote pawn if necessary
         if move.isPawnPromotion:
             
-            print(move.isPawnPromotion)
             promotedPawn = Queen(move.destinationRow, move.destinationCol, move.movedPiece.player)
             self.activePieces[move.movedPiece.player].append(promotedPawn)
             self.activePieces[move.movedPiece.player].remove(move.movedPiece)
@@ -136,7 +135,6 @@ class GameState():
         # undo pawn promotion
         if lastMove.isPawnPromotion:
             
-            print(lastMove.isPawnPromotion)
             pawn = self.promotedPawns[lastMove.movedPiece.player].pop()
             promotedPawn = self.board[pawn.row, pawn.col]
             self.activePieces[lastMove.movedPiece.player].remove(promotedPawn)
