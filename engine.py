@@ -13,6 +13,8 @@ class GameState():
         self.players = ["white", "black"]
         self.turnPlayer = "white"
         self.moveLog = []
+        self.checkmate = False
+        self.stalemate = False
         
         self.activePieces = {p : [] for p in self.players}
         self.capturedPieces = {p : [] for p in self.players}
@@ -137,13 +139,14 @@ class GameState():
         
         """
         Generates all the moves the turn player can make while accounting
-        for checks.
+        for checks. Only handles moves of pieces other than The king. 
+        Preventing moves from the king that put the king in check are 
+        handled in the king class.
         """
         
         moves = []
         
         checks = self.getChecksAndSetPins()
-        print(checks)
         
         if self.kings[self.turnPlayer].inCheck == True:
             
@@ -190,13 +193,25 @@ class GameState():
             # more than 1 check can only be dealt with by moving the king
             else:
                 
-                self.kings[self.turnPlayer].appendMoves(self.board, moves)
+                self.kings[self.turnPlayer].appendMoves(self.board, moves, self)
 
         # king is not in check, all moves are allowed
         else:
             
             moves = self.generateAllMoves()
+        
+        # if there are no legal moves for the turn player, the game ends
+        if len(moves) == 0:
             
+            if self.kings[self.turnPlayer].inCheck:
+                self.checkmate = True
+            else:
+                self.stalemate = True
+        
+        else:
+            
+            self.checkmate = False
+            self.stalemate = False
         
         return moves
 
@@ -207,25 +222,31 @@ class GameState():
         Generates all possible moves for the turn player.
         """
         
-        # list that contains the moves
         moves = []
                 
-        # iterate over all squares on the board
         for piece in self.activePieces[self.turnPlayer]:
             
-            piece.appendMoves(self.board, moves)
+            # calculating king moves requires the game state for checks
+            if piece.pieceType != "King":
+                piece.appendMoves(self.board, moves)
+            else:
+                piece.appendMoves(self.board, moves, self)
                 
         return moves
     
     
-    def getChecksAndSetPins(self):
+    def getChecksAndSetPins(self, checksOnly = False):
         
         """
         Function that looks for any pins and checks of the turn player. First
         check in all linear directions away from the king to cover attack 
         directions of all normal pieces, then check separately for knights.
         Returns a list of tuples containing the checking piece as well as the
-        direction it's checking the king from.
+        direction it's checking the king from. Combining checks and pins into
+        one function makes sense because it's necessary to verify whether an
+        attacking piece gets blocked by another piece. Any allied blocking 
+        piece is also pinned. Setting checksOnly to True is used for the king
+        moves.
         """
         
         # all directions from which a Rook, Bishop or Queen could attack
@@ -240,8 +261,9 @@ class GameState():
         checks = []
         
         # reset all pins
-        for piece in self.activePieces[self.turnPlayer]:
-            piece.resetPin()
+        if not checksOnly:
+            for piece in self.activePieces[self.turnPlayer]:
+                piece.resetPin()
         
         self.kings[self.turnPlayer].inCheck = False
         row = self.kings[self.turnPlayer].row
@@ -288,8 +310,9 @@ class GameState():
                         # allied piece is blocking the check, it is now pinned
                         else:
                             
-                            possiblePin.pinned = True
-                            possiblePin.pinDirection = u
+                            if not checksOnly:
+                                possiblePin.pinned = True
+                                possiblePin.pinDirection = u
                             break
                     
                     # check if there is a king or pawn that can attack the turn
@@ -649,7 +672,7 @@ class Pawn(Piece):
         
         u = self.peaceful[0]
         
-        # pinned pawn can only move along the line of the pin
+        # pinned pawns can only move along the line of the pin
         if not self.pinned or self.pinDirection == self.peaceful or \
             self.pinDirection == (-self.peaceful[0], self.peaceful[1]):
             
@@ -687,7 +710,7 @@ class Pawn(Piece):
             # make sure the destination is a square on the board
             if 0 <= destRow <= 7 and 0 <= destCol <= 7:
                 
-                # check if that square doesn't contain an allied piece
+                # check if that square contains an enemy piece
                 if board.isEnemy(destRow, destCol, self.player):
                     
                     # add moving to that square
@@ -789,13 +812,36 @@ class King(Piece):
         self.inCheck = False
                 
     
-    def appendMoves(self, board, moves):
+    def appendMoves(self, board, moves, gamestate):
         
         """
         Appends all moves the knight can make from its current position on the
         board to the list moves.
         """
         
-        moves += self.singleCoordinateMoves(board, self.relativeCoordinates)
+        kingMoves = self.singleCoordinateMoves(board, self.relativeCoordinates)
+        
+        for i in range(len(kingMoves) - 1, -1, -1):
+            
+            # move the king there and save the current inCheck value
+            self.row = kingMoves[i].destinationRow
+            self.col = kingMoves[i].destinationCol
+            previousCheckState = self.inCheck
+            
+            # check if that move leaves the kind in check
+            gamestate.getChecksAndSetPins(checksOnly = True)
+            
+            # revert back to original position
+            self.row = kingMoves[i].startRow
+            self.col = kingMoves[i].startCol
+            
+            # remove the move if the king is in check
+            if self.inCheck:
+                kingMoves.pop(i)
+            
+            # revert to previous inCheck value
+            self.inCheck = previousCheckState
+        
+        moves += kingMoves
                     
         return
