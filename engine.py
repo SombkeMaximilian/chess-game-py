@@ -90,13 +90,21 @@ class GameState():
         performed.
         """
         
+        promotionDict = {"R": Rook,
+                         "K": Knight,
+                         "B": Bishop,
+                         "Q": Queen}
+        
         # update information of the piece
         move.movedPiece.movePiece(move)
         
         # promote pawn if necessary
         if move.isPawnPromotion:
             
-            promotedPawn = Queen(move.destinationRow, move.destinationCol, move.movedPiece.player)
+            pieceChoice = input("Promote to R, N, B or Q: ")
+            promotedPawn = promotionDict[pieceChoice](move.destinationRow, 
+                                                      move.destinationCol, 
+                                                      move.movedPiece.player)
             self.activePieces[move.movedPiece.player].append(promotedPawn)
             self.activePieces[move.movedPiece.player].remove(move.movedPiece)
             self.promotedPawns[move.movedPiece.player].append(move.movedPiece)
@@ -111,16 +119,18 @@ class GameState():
             self.activePieces[move.capturedPiece.player].remove(move.capturedPiece)
             self.capturedPieces[move.capturedPiece.player].append(move.capturedPiece)
         
+        # save old en passant coordinates for undo
+        move.currEnPassantCoordinates = self.board.enPassantCoordinates
+        
         # set en passant coordinates
         if move.movedPiece.pieceType == "Pawn" and \
            abs(move.startRow - move.destinationRow) == 2:
             
             if move.movedPiece.player == "white": 
                 d = -1
-            else:                                 
+            else:
                 d = 1
                 
-            move.currEnPassantCoordinates = self.board.enPassantCoordinates
             self.board.enPassantCoordinates = (move.startRow + d, move.startCol)
         
         else:
@@ -171,6 +181,7 @@ class GameState():
             
         # set en passant coordinates
         self.board.enPassantCoordinates = lastMove.currEnPassantCoordinates
+        print(self.board.enPassantCoordinates)
                
         # change the turn player back
         self.switchTurn()
