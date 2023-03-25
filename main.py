@@ -93,6 +93,15 @@ def main():
                     
                     gamestate.undoMove()
                     newGameState = True
+                    
+                # r is the hotkey for resetting the board
+                if event.key == p.K_r:
+                    
+                    gamestate = engine.GameState()
+                    legalMoves = gamestate.generateLegalMoves()
+                    newGameState = False
+                    selectedSquare = ()
+                    moveCoordinates = []
         
         # generate new legal moves if the gamestate changed
         if newGameState == True:
