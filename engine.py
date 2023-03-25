@@ -70,7 +70,10 @@ class GameState():
             ]
         
         self.board.addPieces(self.activePieces["white"] + self.activePieces["black"])
+        
         self.kings = {"white": whiteKing, "black": blackKing}
+        self.rooks = {"white": [whiteRook1, whiteRook2],
+                      "black": [blackRook1, blackRook2]}
         
     
     def switchTurn(self):
@@ -136,11 +139,14 @@ class GameState():
         else:
             self.board.enPassantCoordinates = ()
         
-        # add the move to the log
-        self.moveLog.append(move)
+        if move.isCastle:
+            self.performMove(move.rookMove)
         
-        # change the turn player
-        self.switchTurn()
+        # the special rook move during castling isn't a separate move
+        if not move.isCastleRookMove:
+            
+            self.moveLog.append(move)
+            self.switchTurn()
         
         return
         
@@ -157,6 +163,10 @@ class GameState():
             
         # get the last move and remove it from the log
         lastMove = self.moveLog.pop(-1)
+        
+        if lastMove.isCastle:
+            self.moveLog.append(lastMove.rookMove)
+            self.undoMove()
         
         # undo pawn promotion
         if lastMove.isPawnPromotion:
@@ -181,10 +191,9 @@ class GameState():
             
         # set en passant coordinates
         self.board.enPassantCoordinates = lastMove.currEnPassantCoordinates
-        print(self.board.enPassantCoordinates)
-               
-        # change the turn player back
-        self.switchTurn()
+              
+        if not lastMove.isCastleRookMove:   
+            self.switchTurn()
         
         return
     
@@ -284,7 +293,7 @@ class GameState():
             if piece.pieceType != "King":
                 piece.appendMoves(self.board, moves)
             else:
-                piece.appendMoves(self.board, moves, self)
+                piece.appendMoves(self, moves)
                 
         return moves
     
@@ -565,6 +574,10 @@ class Move():
         self.movedPiece = board[self.startRow, self.startCol]
         self.capturedPiece = board[self.destinationRow, self.destinationCol]
         
+        # standards moves are not used for castling
+        self.isCastle = False
+        self.isCastleRookMove = False
+        
         # pawn promotion
         self.isPawnPromotion = pawnpromotion
         
@@ -608,6 +621,27 @@ class Move():
             raise TypeError("Comparison between move and " + type(other) + " not supported.")
 
 
+class Castle(Move):
+    
+    def __init__(self, start, destination, board, side):
+        
+        super().__init__(start, destination, board)
+        self.isCastle = True
+        self.side = side
+        
+        if self.side == "O-O":
+            self.rookMove = Move((7, 7), (7, 5), board)
+        elif self.side == "O-O-O":
+            self.rookMove = Move((7, 0), (7, 3), board)
+            
+        self.rookMove.isCastleRookMove = True
+        
+    
+    def __str__(self):
+        
+        return str(self.moveID)
+    
+        
 class Piece():
     
     def __init__(self, pieceType, row, col, player):
@@ -911,14 +945,14 @@ class King(Piece):
         self.inCheck = False
                 
     
-    def appendMoves(self, board, moves, gamestate):
+    def appendMoves(self, gamestate, moves):
         
         """
-        Appends all moves the knight can make from its current position on the
+        Appends all moves the king can make from its current position on the
         board to the list moves.
         """
         
-        kingMoves = self.singleCoordinateMoves(board, self.relativeCoordinates)
+        kingMoves = self.singleCoordinateMoves(gamestate.board, self.relativeCoordinates)
         
         for i in range(len(kingMoves) - 1, -1, -1):
             
@@ -941,6 +975,107 @@ class King(Piece):
             # revert to previous inCheck value
             self.inCheck = previousCheckState
         
-        moves += kingMoves
+        moves += kingMoves + self.castling(gamestate)
                     
         return
+    
+    
+    def castling(self, gamestate):
+        
+        """
+        Checks whether castling is possible, return list of castling moves
+        that can be performed.
+        """
+        
+        castlingMoves = []
+        castleQueenSide = False
+        castleKingSide = False
+        
+        rooks = gamestate.rooks[self.player]
+        
+        # cannot castle if king is in check or has moved
+        if self.inCheck or self.hasMoved:
+             return castlingMoves
+        
+        # cannot castle on a side if respective rook has moved (or is captured)
+        for r in rooks:
+            
+            if r.hasMoved:
+                continue
+            
+            if r in gamestate.capturedPieces[self.player]:
+                continue
+            
+            else:
+                if r.col == 0:
+                    castleQueenSide = True
+                
+                elif r.col == 7:
+                    castleKingSide = True
+        
+        
+        if castleQueenSide:
+            
+            castlePossible = True
+            coordinates = [(self.row, c) for c in range(1,4)]
+            
+            # square to the right of the queen side rook is empty
+            for coordinate in coordinates:
+                
+                # can't castle if enemy piece between king and rook
+                if not gamestate.board.isEmpty(*coordinate):
+                    castlePossible = False
+                    break
+                
+                self.col = coordinate[1] 
+                
+                gamestate.getChecksAndSetPins(checksOnly = True)
+                
+                # can't castle if the king would be in check on either of the
+                # 2 squares to its left, the 3rd square doesn't matter
+                if self.inCheck and not self.col == 1:
+                    castlePossible = False
+                    break
+                
+            self.col = 4
+            self.inCheck = False
+            
+            if castlePossible:
+                
+                castlingMoves.append(Castle((self.row, self.col), 
+                                           (self.row, self.col - 2), 
+                                           gamestate.board, 
+                                           "O-O-O"))    
+
+        if castleKingSide:
+            
+            castlePossible = True
+            coordinates = [(self.row, c) for c in range(5,7)]
+
+            for coordinate in coordinates:
+                
+                if not gamestate.board.isEmpty(*coordinate):
+                    castlePossible = False
+                    break
+                
+                self.col = coordinate[1] 
+                
+                gamestate.getChecksAndSetPins(checksOnly = True)
+                
+                if self.inCheck:
+                    castlePossible = False
+                    break
+                
+            self.col = 4
+            self.inCheck = False
+            
+            if castlePossible:
+                
+                castlingMoves.append(Castle((self.row, self.col), 
+                                           (self.row, self.col + 2), 
+                                           gamestate.board, 
+                                           "O-O"))    
+        
+        print(castlingMoves)
+        
+        return castlingMoves
