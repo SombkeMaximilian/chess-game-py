@@ -630,9 +630,9 @@ class Castle(Move):
         self.side = side
         
         if self.side == "O-O":
-            self.rookMove = Move((7, 7), (7, 5), board)
+            self.rookMove = Move((self.startRow, 7), (self.startRow, 5), board)
         elif self.side == "O-O-O":
-            self.rookMove = Move((7, 0), (7, 3), board)
+            self.rookMove = Move((self.startRow, 0), (self.startRow, 3), board)
             
         self.rookMove.isCastleRookMove = True
         
