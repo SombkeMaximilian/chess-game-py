@@ -99,3 +99,8 @@ def highlightMoves(window, gamestate, legalMoves, selectedSquare, SQUARE_SIZE, B
                 window.blit(highlightedSquare, moveCoordinates)
     
     return
+
+
+def gameovertext(window, winner):
+    
+    pass

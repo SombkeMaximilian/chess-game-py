@@ -94,7 +94,7 @@ class GameState():
         """
         
         promotionDict = {"R": Rook,
-                         "K": Knight,
+                         "N": Knight,
                          "B": Bishop,
                          "Q": Queen}
         

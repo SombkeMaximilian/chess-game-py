@@ -34,6 +34,8 @@ def main():
     # start running the game, this section is executed once per frame
     active = True
     
+    gameover = False
+    
     while active:
         
         # event queue
@@ -45,7 +47,7 @@ def main():
                 active = False
             
             # mouse presses
-            if event.type == p.MOUSEBUTTONDOWN:
+            if event.type == p.MOUSEBUTTONDOWN and not gameover:
                 
                 mouseClick = tuple(math.floor((coordinate - BORDERS) / SQUARE_SIZE) 
                                    for coordinate in p.mouse.get_pos())
@@ -93,6 +95,7 @@ def main():
                     
                     gamestate.undoMove()
                     newGameState = True
+                    gameover = False
                     
                 # r is the hotkey for resetting the board
                 if event.key == p.K_r:
@@ -100,6 +103,7 @@ def main():
                     gamestate = engine.GameState()
                     legalMoves = gamestate.generateLegalMoves()
                     newGameState = False
+                    gameover = False
                     selectedSquare = ()
                     moveCoordinates = []
         
@@ -110,7 +114,12 @@ def main():
             newGameState = False
             
         graphics.drawGameState(window, gamestate, legalMoves, selectedSquare, SQUARE_SIZE, BORDERS, DIM, IMG)
-    
+        
+        if gamestate.checkmate:
+            gameover = True
+        elif gamestate.stalemate:
+            gameover = True
+        
         clock.tick(FPS)
         p.display.flip()
     
@@ -131,7 +140,7 @@ if __name__ == "__main__":
     """
     
     WIDTH = HEIGHT = 512
-    BORDERS = 100
+    BORDERS = 0
     DIM = 8
     SQUARE_SIZE = int(WIDTH / DIM)
     FPS = 30
