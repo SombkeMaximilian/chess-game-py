@@ -140,7 +140,7 @@ if __name__ == "__main__":
     """
     
     WIDTH = HEIGHT = 512
-    BORDERS = 0
+    BORDERS = 100
     DIM = 8
     SQUARE_SIZE = int(WIDTH / DIM)
     FPS = 30
