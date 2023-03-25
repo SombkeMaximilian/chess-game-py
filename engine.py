@@ -98,10 +98,9 @@ class GameState():
                          "B": Bishop,
                          "Q": Queen}
         
-        # update information of the piece
         move.movedPiece.movePiece(move)
         
-        # promote pawn if necessary
+        # pawn promotion by replacing pawn with new piece object on the board
         if move.isPawnPromotion:
             
             pieceChoice = input("Promote to R, N, B or Q: ")
@@ -113,7 +112,6 @@ class GameState():
             self.promotedPawns[move.movedPiece.player].append(move.movedPiece)
             move.movedPiece = promotedPawn
         
-        # update board
         self.board.updateMove(move)
         
         # if a piece was captured, remove it from the list of active pieces
@@ -139,10 +137,11 @@ class GameState():
         else:
             self.board.enPassantCoordinates = ()
         
+        # castling is two moves in one
         if move.isCastle:
             self.performMove(move.rookMove)
         
-        # the special rook move during castling isn't a separate move
+        # rook move when castling doesn't switch turn
         if not move.isCastleRookMove:
             
             self.moveLog.append(move)
@@ -157,13 +156,12 @@ class GameState():
         Undo the last move.
         """
         
-        # check if there is a move to undo (log is not empty)
         if not self.moveLog:
             return
             
-        # get the last move and remove it from the log
         lastMove = self.moveLog.pop(-1)
         
+        # also need to undo the special rook move
         if lastMove.isCastle:
             self.moveLog.append(lastMove.rookMove)
             self.undoMove()
@@ -177,10 +175,7 @@ class GameState():
             self.activePieces[lastMove.movedPiece.player].append(pawn)
             lastMove.movedPiece = pawn
             
-        # update information of the moved piece
         lastMove.movedPiece.undoMovePiece(lastMove)
-        
-        # update board
         self.board.updateUndo(lastMove)
         
         # if a piece was captured, add it back to the active pieces
@@ -191,7 +186,8 @@ class GameState():
             
         # set en passant coordinates
         self.board.enPassantCoordinates = lastMove.currEnPassantCoordinates
-              
+        
+        # rook move when castling doesn't switch turn
         if not lastMove.isCastleRookMove:   
             self.switchTurn()
         
@@ -216,10 +212,7 @@ class GameState():
             # 1 check still allows other pieces to make moves
             if len(checks) == 1:
             
-                # generate all moves first
                 moves = self.generateAllMoves()
-                
-                # non-king pieces can only move to these coordinates
                 validSquares = []
                 
                 checkingPiece = checks[0][0]
@@ -244,7 +237,7 @@ class GameState():
                         
                         validSquares.append((row, col))
                 
-                # remove all moves of other pieces that do not get the king out of check
+                # remove moves that don't deal with the check
                 for i in range(len(moves) - 1, -1, -1):
                     
                     if moves[i].movedPiece.pieceType != "King":
@@ -271,6 +264,7 @@ class GameState():
             else:
                 self.stalemate = True
         
+        # undoing a move can let the game continue
         else:
             
             self.checkmate = False
@@ -323,7 +317,7 @@ class GameState():
         
         checks = []
         
-        # reset all pins
+        # reset all pins from previous calls
         if not checksOnly:
             for piece in self.activePieces[self.turnPlayer]:
                 piece.resetPin()
@@ -340,13 +334,10 @@ class GameState():
             currRow = row + u[0]
             currCol = col + u[1]
             
-            # keep going in that direction until the end of the board at most
             while 0 <= currRow <= 7 and 0 <= currCol <= 7:
                 
-                # check if there is an allied piece on that square
                 if self.board.isAlly(currRow, currCol, self.turnPlayer):
                     
-                    # no possible pin yet
                     if not possiblePin:
                         
                         # king moves are generated in a way that might make
@@ -359,11 +350,9 @@ class GameState():
                         
                         break
                 
-                # check if there is an enemy piece on that square
                 elif self.board.isEnemy(currRow, currCol, self.turnPlayer):
                     
-                    # check if it's a sliding piece that can attack in this 
-                    # direction, negating the vector is not necessary (symmetry)
+                    # check if it's a sliding piece that can attack
                     if u in self.board[currRow, currCol].unitVectors:
                         
                         # no allied piece is blocking the enemy sliding piece
@@ -380,9 +369,7 @@ class GameState():
                                 possiblePin.pinDirection = u
                             break
                     
-                    # check if there is a king or pawn that can attack the turn
-                    # player's king, negating the vector is necessary (pawns 
-                    # move only in one direction)
+                    # check if there is a king or pawn that can attack
                     elif (-u[0], -u[1]) in self.board[currRow, currCol].relativeCoordinates and \
                          distanceFromKing == 1:
                          
@@ -391,6 +378,7 @@ class GameState():
                     
                     # enemy pieces beyond the first in that direction are blocked
                     else:
+                        
                         break
                     
                 distanceFromKing += 1
@@ -404,13 +392,10 @@ class GameState():
             currRow = row + k[0]
             currCol = col + k[1]
             
-            # make sure it's a square on the board
             if 0 <= currRow <= 7 and 0 <= currCol <= 7:
                 
-                # check if it's an enemy piece
                 if self.board.isEnemy(currRow, currCol, self.turnPlayer):    
                     
-                    # check if it's a knight
                     if self.board[currRow, currCol].pieceType == "Knight":
                         
                         checks.append((self.board[currRow, currCol], k))
@@ -566,11 +551,9 @@ class Move():
                  pawnpromotion = False,
                  enpassant = False):
                 
-        # store start position and destination
         self.startRow, self.startCol = start
         self.destinationRow, self.destinationCol = destination
         
-        # store moved and captured pieces
         self.movedPiece = board[self.startRow, self.startCol]
         self.capturedPiece = board[self.destinationRow, self.destinationCol]
         
@@ -578,10 +561,8 @@ class Move():
         self.isCastle = False
         self.isCastleRookMove = False
         
-        # pawn promotion
         self.isPawnPromotion = pawnpromotion
         
-        # en passant
         self.isEnPassant = enpassant
         self.currEnPassantCoordinates = ()
         
@@ -594,11 +575,11 @@ class Move():
             
             self.capturedPiece = board[self.destinationRow - d, self.destinationCol]
         
-        # is this the piece's first move (important for pawns, castling, ..)
+        # important for pawns, castling
         if self.movedPiece != None:
             self.firstMove = not self.movedPiece.hasMoved
         
-        # store all the information about the move for comparisons and output
+        # for comparisons and move log output
         self.moveID = str(self.startRow) + str(self.startCol) \
                       + str(self.destinationRow) + str(self.destinationCol)
     
@@ -610,10 +591,8 @@ class Move():
     
     def __eq__(self, other):
         
-        # make sure it only compares to other Move objects
         if isinstance(other, Move):
             
-            # compare the information
             return self.moveID == other.moveID
         
         else:
@@ -688,12 +667,12 @@ class Piece():
     def slidingMoves(self, board, pattern):
         
         """
-        Blueprint for calculating moves of Rooks, Bishops and Queens.
+        Blueprint for calculating moves of Rooks, Bishops and Queens. They
+        cannot jump over other pieces.
         """
         
         moves = []
         
-        # check each direction
         for u in self.unitVectors:
             
             # pinned sliding pieces can only move along the line of the pin
@@ -703,28 +682,19 @@ class Piece():
             destRow = self.row + u[0]
             destCol = self.col + u[1]
             
-            # keep going in that direction until the end of the board at most
             while 0 <= destRow <= 7 and 0 <= destCol <= 7:
                 
-                # check for empty squares along the way
                 if board.isEmpty(destRow, destCol):
                     
-                    # add all of those as legal moves
                     moves.append(Move((self.row, self.col), (destRow, destCol), board))
                 
-                # check for enemy pieces along the way
                 elif board.isEnemy(destRow, destCol, self.player):
                     
-                    # add capturing that piece as a legal move
                     moves.append(Move((self.row, self.col), (destRow, destCol), board))
-                    
-                    # cannot jump over other pieces
                     break
                 
-                # neither empty nor an enemy piece, it's an allied piece
                 else:
                     
-                    # cannot jump over other pieces
                     break
                 
                 destRow += u[0]
@@ -736,7 +706,8 @@ class Piece():
     def singleCoordinateMoves(self, board, relativeCoordinates):
         
         """
-        Blueprint for calculating moves of Knights and Kings.
+        Blueprint for calculating moves of Knights and Kings. Knights can 
+        jump over other pieces.
         """
         
         moves = []
@@ -745,20 +716,15 @@ class Piece():
         if self.pinned:
             return moves
         
-        # check all relative coordinates
         for c in relativeCoordinates:
             
-            # destination coordinates of the move
             destRow = self.row + c[0]
             destCol = self.col + c[1]
             
-            # make sure the destination is a square on the board
             if 0 <= destRow <= 7 and 0 <= destCol <= 7:
                 
-                # check if that square doesn't contain an allied piece
                 if not board.isAlly(destRow, destCol, self.player):
                     
-                    # add moving to that square
                     moves.append(Move((self.row, self.col), (destRow, destCol), board))
         
         return moves
@@ -799,12 +765,10 @@ class Pawn(Piece):
         if not self.pinned or self.pinDirection == self.peaceful or \
             self.pinDirection == (-self.peaceful[0], self.peaceful[1]):
             
-            # check if the square in front is empty
             if board.isEmpty(self.row + u, self.col):
                 
                 pawnpromotion = self.row+u == 7 or self.row+u == 0
                 
-                # add moving 1 square forward as a legal move
                 moves.append(Move((self.row, self.col), 
                                   (self.row+u, self.col), 
                                   board, 
@@ -813,41 +777,39 @@ class Pawn(Piece):
                 # pawns can move 2 squares if they haven't moved yet
                 if not self.hasMoved:
                        
-                       # check if that square is empty
                        if board.isEmpty(self.row + 2 * u, self.col):
                            
-                           # add moving 2 squares forward as a legal move
                            moves.append(Move((self.row, self.col), 
                                              (self.row+2*u, self.col), 
                                              board))
     
         
-        # check the capture squares
+        # capturing
         for c in self.relativeCoordinates:
             
             # pinned pawns can only capture the pinning piece
             if self.pinned and self.pinDirection != c:
                 continue
             
-            # destination coordinates of the move
             destRow = self.row + c[0]
             destCol = self.col + c[1]
             
+            # pawns are promoted when they reach the other end of the board
             pawnpromotion = self.row+u == 7 or self.row+u == 0
-            
-            # make sure the destination is a square on the board
+        
             if 0 <= destRow <= 7 and 0 <= destCol <= 7:
                 
-                # check if that square contains an enemy piece
                 if board.isEnemy(destRow, destCol, self.player) or \
                    board.enPassantCoordinates == (destRow, destCol):
                     
-                    # add moving to that square
+                    # is this move an en passant
+                    enpassant = board.enPassantCoordinates == (destRow, destCol)
+                    
                     moves.append(Move((self.row, self.col), 
                                       (destRow, destCol), 
                                       board,
                                       pawnpromotion,
-                                      board.enPassantCoordinates == (destRow, destCol)))
+                                      enpassant))
                     
         return
     
@@ -956,12 +918,12 @@ class King(Piece):
         
         for i in range(len(kingMoves) - 1, -1, -1):
             
-            # move the king there and save the current inCheck value
+            # perform the move and save the current inCheck value
             self.row = kingMoves[i].destinationRow
             self.col = kingMoves[i].destinationCol
             previousCheckState = self.inCheck
             
-            # check if that move leaves the kind in check
+            # check if that move leaves the king in check
             gamestate.getChecksAndSetPins(checksOnly = True)
             
             # revert back to original position
@@ -993,11 +955,11 @@ class King(Piece):
         
         rooks = gamestate.rooks[self.player]
         
-        # cannot castle if king is in check or has moved
+        # can't castle if king is in check or has moved
         if self.inCheck or self.hasMoved:
              return castlingMoves
         
-        # cannot castle on a side if respective rook has moved (or is captured)
+        # can't castle on a side if respective rook has moved (or is captured)
         for r in rooks:
             
             if r.hasMoved:

@@ -27,7 +27,7 @@ def drawGameState(window, gamestate, legalMoves, selectedSquare,
     """
     
     # drawing the board itself
-
+    
     boardColors = [p.Color("light gray"), p.Color("dark gray")] 
     
     for row in range(DIM):
@@ -79,12 +79,15 @@ def highlightMoves(window, gamestate, legalMoves, selectedSquare, SQUARE_SIZE, B
     
     if gamestate.turnPlayer == gamestate.board[row, col].player:
         
+        # highlighting selected piece
+        
         highlightedSquare = p.Surface((SQUARE_SIZE, SQUARE_SIZE))
         highlightedSquare.set_alpha(70)
         highlightedSquare.fill(p.Color("blue"))
-        
         pieceCoordinates = (col*SQUARE_SIZE+BORDERS, row*SQUARE_SIZE+BORDERS)
         window.blit(highlightedSquare, pieceCoordinates)
+        
+        # highlighting the piece's possible moves
         
         highlightedSquare.fill(p.Color("green"))
         for move in legalMoves:
