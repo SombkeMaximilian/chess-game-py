@@ -103,7 +103,7 @@ class GameState():
         # pawn promotion by replacing pawn with new piece object on the board
         if move.isPawnPromotion:
             
-            pieceChoice = input("Promote to R, N, B or Q: ")
+            pieceChoice = input("Promote to R, N, B or Q: ").upper()
             promotedPawn = promotionDict[pieceChoice](move.destinationRow, 
                                                       move.destinationCol, 
                                                       move.movedPiece.player)
