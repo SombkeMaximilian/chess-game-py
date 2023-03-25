@@ -1076,6 +1076,4 @@ class King(Piece):
                                            gamestate.board, 
                                            "O-O"))    
         
-        print(castlingMoves)
-        
         return castlingMoves
