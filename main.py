@@ -118,7 +118,7 @@ def main():
             newGameState = False
             
         # update the graphics
-        graphics.drawGameState(window, gamestate, SQUARE_SIZE, BORDERS, DIM, IMG)
+        graphics.drawGameState(window, gamestate, legalMoves, selectedSquare, SQUARE_SIZE, BORDERS, DIM, IMG)
     
         clock.tick(FPS)
         p.display.flip()
