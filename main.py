@@ -18,9 +18,13 @@ def main():
     # set up pygame
     totalWidth = WIDTH + BORDERS["l"] + BORDERS["r"]
     totalHeight = WIDTH + BORDERS["t"] + BORDERS["b"]
+    print(totalWidth, totalHeight)
     window = p.display.set_mode((totalWidth, totalHeight))
     window.fill(p.Color("white"))
     clock = p.time.Clock()
+    
+    # font for the move log
+    font = p.font.Font("fonts/Segoe UI.ttf", 14)
     
     # generate initial gamestate
     gamestate = engine.GameState()
@@ -117,9 +121,8 @@ def main():
             newGameState = False
         
         graphics.drawGameState(window, gamestate, legalMoves, selectedSquare, 
-                               images, totalWidth, totalHeight, 
-                               SQUARE_SIZE, BORDERS, DIM)
-        graphics.drawMoveLog(window, gamestate)
+                               images, font, totalWidth, totalHeight,
+                               HEIGHT, SQUARE_SIZE, BORDERS, DIM)
         
         # end of game screen
         if gamestate.checkmate:
@@ -153,7 +156,7 @@ if __name__ == "__main__":
     
     WIDTH = 512
     HEIGHT = 512
-    BORDERS = {"l": 25, "r": 200, "t": 25, "b": 25}
+    BORDERS = {"l": 25, "r": 350, "t": 25, "b": 25}
     DIM = 8
     SQUARE_SIZE = int(WIDTH / DIM)
     FPS = 30

@@ -586,7 +586,7 @@ class Move():
     
     def __str__(self):
         
-        return str(self.movedPiece) + self.moveID + str(self.capturedPiece)
+        return self.moveID
     
     
     def __eq__(self, other):
@@ -608,9 +608,9 @@ class Castle(Move):
         self.isCastle = True
         self.side = side
         
-        if self.side == "O-O":
+        if self.side == "0-0":
             self.rookMove = Move((self.startRow, 7), (self.startRow, 5), board)
-        elif self.side == "O-O-O":
+        elif self.side == "0-0-0":
             self.rookMove = Move((self.startRow, 0), (self.startRow, 3), board)
             
         self.rookMove.isCastleRookMove = True
@@ -618,7 +618,7 @@ class Castle(Move):
     
     def __str__(self):
         
-        return str(self.moveID)
+        return self.side
     
         
 class Piece():
@@ -1007,7 +1007,7 @@ class King(Piece):
                 castlingMoves.append(Castle((self.row, self.col), 
                                            (self.row, self.col - 2), 
                                            gamestate.board, 
-                                           "O-O-O"))    
+                                           "0-0-0"))    
 
         if castleKingSide:
             
@@ -1036,6 +1036,6 @@ class King(Piece):
                 castlingMoves.append(Castle((self.row, self.col), 
                                            (self.row, self.col + 2), 
                                            gamestate.board, 
-                                           "O-O"))    
+                                           "0-0"))    
         
         return castlingMoves

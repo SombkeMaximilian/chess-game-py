@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import pygame as p
+import itertools
 
 def loadImages():
     
@@ -26,8 +27,8 @@ def loadImages():
     return images
      
    
-def drawGameState(window, gamestate, legalMoves, selectedSquare, images, 
-                  totalWidth, totalHeight, SQUARE_SIZE, BORDERS, DIM):
+def drawGameState(window, gamestate, legalMoves, selectedSquare, images, font,
+                  totalWidth, totalHeight, HEIGHT, SQUARE_SIZE, BORDERS, DIM):
     
     """
     Draws a given game state in the window.
@@ -35,9 +36,9 @@ def drawGameState(window, gamestate, legalMoves, selectedSquare, images,
     
     # frame around the board
     
-    framesurface = p.Rect(0, 0, totalWidth, totalHeight)
+    frameRect = p.Rect(0, 0, totalWidth, totalHeight)
     frame = images["frame"]
-    window.blit(frame, framesurface)
+    window.blit(frame, frameRect)
     
     # drawing the board itself
     
@@ -51,11 +52,9 @@ def drawGameState(window, gamestate, legalMoves, selectedSquare, images,
             square = p.Rect(col*SQUARE_SIZE+BORDERS["l"], row*SQUARE_SIZE+BORDERS["t"], SQUARE_SIZE, SQUARE_SIZE)
             p.draw.rect(window, color, square)
     
-    
     # highlighting
     
     highlightMoves(window, gamestate, legalMoves, selectedSquare, SQUARE_SIZE, BORDERS)
-    
     
     # drawing the pieces on the board
     
@@ -71,6 +70,10 @@ def drawGameState(window, gamestate, legalMoves, selectedSquare, images,
             square = p.Rect(col*SQUARE_SIZE+BORDERS["l"], row*SQUARE_SIZE+BORDERS["t"], SQUARE_SIZE, SQUARE_SIZE)
             piece = p.transform.scale(images[str(currentSquare)], (SQUARE_SIZE, SQUARE_SIZE))
             window.blit(piece, square)
+            
+    # drawing the move log
+    
+    drawMoveLog(window, gamestate, font, totalWidth, HEIGHT, BORDERS)
         
     return
 
@@ -141,17 +144,55 @@ def highlightMoves(window, gamestate, legalMoves, selectedSquare, SQUARE_SIZE, B
     return
 
 
-def drawMoveLog(window, gamestate):
+def drawMoveLog(window, gamestate, font, totalWidth, HEIGHT, BORDERS):
     
     """
     Draws the move log of a game state.
     """
     
+    moveLogX = totalWidth-BORDERS["r"] + 25
+    moveLogY = BORDERS["t"]
+    moveLogWidth = BORDERS["r"] - 50
+    moveLogHeight = HEIGHT
+    
+    # erase previous move log
+    logRect = p.Rect(moveLogX, moveLogY, moveLogWidth, moveLogHeight)
+    window.fill(p.Color("white"), logRect)
+    
     if not gamestate.moveLog:
         return
     
+    gap = 14
     
+    logText = []
     
+    # convert the move log to strings of turns
+    for i in range(0, len(gamestate.moveLog), 2):
+        
+        turn = str(i//2 + 1) + ". " + str(gamestate.moveLog[i]) + " "
+        
+        if i+1 < len(gamestate.moveLog):
+            
+            turn += str(gamestate.moveLog[i+1]) + " "
+        
+        logText.append(turn)
+    
+    # taken from https://docs.python.org/3/library/itertools.html#itertools-recipes
+    def grouper(iterable, n, *, incomplete='fill', fillvalue=" "):
+        
+        args = [iter(iterable)] * n
+        return itertools.zip_longest(*args, fillvalue=fillvalue)
+    
+    turnsPerLine = 3
+    currLine = 0
+    
+    for line in grouper(logText, turnsPerLine):
+        
+        text = font.render("".join(line), True, p.Color("black"))
+        textBox = p.Rect(moveLogX, moveLogY+currLine*gap, moveLogWidth, gap)
+        window.blit(text, textBox)
+        currLine += 1
+        
     return
 
 
