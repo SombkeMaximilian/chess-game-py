@@ -29,7 +29,7 @@ def drawGameState(window, gamestate, legalMoves, selectedSquare, images,
                   SQUARE_SIZE, BORDERS, DIM):
     
     """
-    Draws a given game state on screen and updates it.
+    Draws a given game state in the window.
     """
     
     # drawing the board itself
@@ -41,7 +41,7 @@ def drawGameState(window, gamestate, legalMoves, selectedSquare, images,
         for col in range(DIM):
             
             color = boardColors[((row + col) % 2)]
-            square = p.Rect(col*SQUARE_SIZE+BORDERS, row*SQUARE_SIZE+BORDERS, SQUARE_SIZE, SQUARE_SIZE)
+            square = p.Rect(col*SQUARE_SIZE+BORDERS["l"], row*SQUARE_SIZE+BORDERS["t"], SQUARE_SIZE, SQUARE_SIZE)
             p.draw.rect(window, color, square)
     
     
@@ -61,12 +61,12 @@ def drawGameState(window, gamestate, legalMoves, selectedSquare, images,
             if currentSquare == None:
                 continue
             
-            square = p.Rect(col*SQUARE_SIZE+BORDERS, row*SQUARE_SIZE+BORDERS, SQUARE_SIZE, SQUARE_SIZE)
+            square = p.Rect(col*SQUARE_SIZE+BORDERS["l"], row*SQUARE_SIZE+BORDERS["t"], SQUARE_SIZE, SQUARE_SIZE)
             piece = p.transform.scale(images[str(currentSquare)], (SQUARE_SIZE, SQUARE_SIZE))
             window.blit(piece, square)
     
     return
-            
+
 
 def highlightMoves(window, gamestate, legalMoves, selectedSquare, SQUARE_SIZE, BORDERS):
     
@@ -75,6 +75,25 @@ def highlightMoves(window, gamestate, legalMoves, selectedSquare, SQUARE_SIZE, B
     squares that piece can move to.
     """
     
+    # surface for highlighting squares
+    highlightedSquare = p.Surface((SQUARE_SIZE, SQUARE_SIZE))
+    highlightedSquare.set_alpha(70)
+    
+    # highlighting last move
+    
+    if gamestate.moveLog:
+        
+        lastMove = gamestate.moveLog[-1]
+        highlightedSquare.fill(p.Color("yellow"))
+        
+        moveStart = (lastMove.destinationCol*SQUARE_SIZE+BORDERS["l"], 
+                     lastMove.destinationRow*SQUARE_SIZE+BORDERS["t"])
+        moveDestination = (lastMove.startCol*SQUARE_SIZE+BORDERS["l"], 
+                           lastMove.startRow*SQUARE_SIZE+BORDERS["t"])
+        
+        window.blit(highlightedSquare, moveStart)
+        window.blit(highlightedSquare, moveDestination)
+    
     if not selectedSquare:
         return
     
@@ -82,40 +101,51 @@ def highlightMoves(window, gamestate, legalMoves, selectedSquare, SQUARE_SIZE, B
     
     if not gamestate.board.isAlly(row, col, gamestate.turnPlayer):
         return
+
+    # highlighting selected piece
     
-    if gamestate.turnPlayer == gamestate.board[row, col].player:
+    highlightedSquare.fill(p.Color("blue"))
+    pieceCoordinates = (col*SQUARE_SIZE+BORDERS["l"], row*SQUARE_SIZE+BORDERS["t"])
+    window.blit(highlightedSquare, pieceCoordinates)
+    
+    # highlighting the piece's possible moves
+    
+    highlightedSquare.fill(p.Color("green"))
+    for move in legalMoves:
         
-        # highlighting selected piece
-        
-        highlightedSquare = p.Surface((SQUARE_SIZE, SQUARE_SIZE))
-        highlightedSquare.set_alpha(70)
-        highlightedSquare.fill(p.Color("blue"))
-        pieceCoordinates = (col*SQUARE_SIZE+BORDERS, row*SQUARE_SIZE+BORDERS)
-        window.blit(highlightedSquare, pieceCoordinates)
-        
-        # highlighting the piece's possible moves
-        
-        highlightedSquare.fill(p.Color("green"))
-        for move in legalMoves:
+        if move.startRow == row and move.startCol == col:
             
-            if move.startRow == row and move.startCol == col:
-                
-                moveCoordinates = (move.destinationCol*SQUARE_SIZE+BORDERS, 
-                                   move.destinationRow*SQUARE_SIZE+BORDERS)
-                window.blit(highlightedSquare, moveCoordinates)
+            moveCoordinates = (move.destinationCol*SQUARE_SIZE+BORDERS["l"], 
+                               move.destinationRow*SQUARE_SIZE+BORDERS["t"])
+            window.blit(highlightedSquare, moveCoordinates)
     
     return
 
 
-def gameoverText(window, result, images, WIDTH, BORDERS):
+def drawMoveLog(window, gamestate):
+    
+    """
+    Draws the move log of a game state.
+    """
+    
+    if not gamestate.moveLog:
+        return
+    
+    
+    
+    return
+
+
+def drawGameoverText(window, result, images, WIDTH, BORDERS):
     
     """
     Displays the end of game screen when called.
     """
     
-    totalwidth = WIDTH + 2 * BORDERS
+    halfBoardX = WIDTH/2 + BORDERS["l"]
+    halfBoardY = WIDTH/2 + BORDERS["t"]
     size = (WIDTH * 0.8, WIDTH * 0.4)
-    centeredposition = (totalwidth/2 - size[0]/2, totalwidth/2 - size[1]/2)
+    centeredposition = (halfBoardX - size[0]/2, halfBoardY - size[1]/2)
     
     endgamesurface = p.Rect(*centeredposition, *size)
     endgametext = p.transform.scale(images[result], size)

@@ -16,7 +16,9 @@ def main():
     p.init()
     
     # set up pygame
-    window = p.display.set_mode((WIDTH+2*BORDERS, HEIGHT+2*BORDERS))
+    totalWidth = WIDTH + BORDERS["l"] + BORDERS["r"]
+    totalHeight = WIDTH + BORDERS["t"] + BORDERS["b"]
+    window = p.display.set_mode((totalWidth, totalHeight))
     window.fill(p.Color("white"))
     clock = p.time.Clock()
     
@@ -31,11 +33,10 @@ def main():
     selectedSquare = ()
     moveCoordinates = []
     
-    # start running the game, this section is executed once per frame
     active = True
-    
     gameover = False
     
+    # start running the game, this section is executed once per frame
     while active:
         
         # event queue
@@ -49,8 +50,10 @@ def main():
             # mouse presses
             if event.type == p.MOUSEBUTTONDOWN and not gameover:
                 
-                mouseClick = tuple(math.floor((coordinate - BORDERS) / SQUARE_SIZE) 
-                                   for coordinate in p.mouse.get_pos())
+                clickCoordinates = p.mouse.get_pos()
+                clickY = math.floor((clickCoordinates[0] - BORDERS["l"]) / SQUARE_SIZE)
+                clickX = math.floor((clickCoordinates[1] - BORDERS["t"]) / SQUARE_SIZE)
+                mouseClick = (clickY, clickX)
                 
                 # unselecting by clicking again
                 if mouseClick == selectedSquare:
@@ -114,18 +117,19 @@ def main():
             newGameState = False
         
         graphics.drawGameState(window, gamestate, legalMoves, selectedSquare, images, SQUARE_SIZE, BORDERS, DIM)
+        graphics.drawMoveLog(window, gamestate)
         
         # end of game screen
         if gamestate.checkmate:
             
             gameover = True
             winner = [player for player in gamestate.players if player != gamestate.turnPlayer][0]
-            graphics.gameoverText(window, winner + "wins", images, WIDTH, BORDERS)
+            graphics.drawGameoverText(window, winner + "wins", images, WIDTH, BORDERS)
             
         elif gamestate.stalemate:
             
             gameover = True
-            graphics.gameoverText(window, "stalemate", images, WIDTH, BORDERS)
+            graphics.drawGameoverText(window, "stalemate", images, WIDTH, BORDERS)
         
         clock.tick(FPS)
         p.display.flip()
@@ -143,14 +147,13 @@ if __name__ == "__main__":
     DIM = Dimensions of the board is always 8.
     Each row and column has 8 squares of size SQUARE_SIZE.
     FPS the game runs at, possibly allow the user to change this later.
-    Image names of the pieces will be kept in the dictionary IMG.
     """
     
-    WIDTH = HEIGHT = 512
-    BORDERS = 0
+    WIDTH = 512
+    HEIGHT = 512
+    BORDERS = {"l": 200, "r": 200, "t": 50, "b": 50}
     DIM = 8
     SQUARE_SIZE = int(WIDTH / DIM)
     FPS = 30
-    IMG = {}
     
     main()
