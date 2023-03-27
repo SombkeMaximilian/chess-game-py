@@ -116,7 +116,9 @@ def main():
             legalMoves = gamestate.generateLegalMoves()
             newGameState = False
         
-        graphics.drawGameState(window, gamestate, legalMoves, selectedSquare, images, SQUARE_SIZE, BORDERS, DIM)
+        graphics.drawGameState(window, gamestate, legalMoves, selectedSquare, 
+                               images, totalWidth, totalHeight, 
+                               SQUARE_SIZE, BORDERS, DIM)
         graphics.drawMoveLog(window, gamestate)
         
         # end of game screen
@@ -151,7 +153,7 @@ if __name__ == "__main__":
     
     WIDTH = 512
     HEIGHT = 512
-    BORDERS = {"l": 200, "r": 200, "t": 50, "b": 50}
+    BORDERS = {"l": 25, "r": 200, "t": 25, "b": 25}
     DIM = 8
     SQUARE_SIZE = int(WIDTH / DIM)
     FPS = 30

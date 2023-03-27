@@ -21,16 +21,23 @@ def loadImages():
     for result in results:
         images[result] = p.image.load(f"images/endgame/{result}.png")
     
-        
+    images["frame"] = p.image.load("images/frame.png")
+    
     return images
      
    
 def drawGameState(window, gamestate, legalMoves, selectedSquare, images, 
-                  SQUARE_SIZE, BORDERS, DIM):
+                  totalWidth, totalHeight, SQUARE_SIZE, BORDERS, DIM):
     
     """
     Draws a given game state in the window.
     """
+    
+    # frame around the board
+    
+    framesurface = p.Rect(0, 0, totalWidth, totalHeight)
+    frame = images["frame"]
+    window.blit(frame, framesurface)
     
     # drawing the board itself
     
@@ -64,7 +71,7 @@ def drawGameState(window, gamestate, legalMoves, selectedSquare, images,
             square = p.Rect(col*SQUARE_SIZE+BORDERS["l"], row*SQUARE_SIZE+BORDERS["t"], SQUARE_SIZE, SQUARE_SIZE)
             piece = p.transform.scale(images[str(currentSquare)], (SQUARE_SIZE, SQUARE_SIZE))
             window.blit(piece, square)
-    
+        
     return
 
 
@@ -78,6 +85,17 @@ def highlightMoves(window, gamestate, legalMoves, selectedSquare, SQUARE_SIZE, B
     # surface for highlighting squares
     highlightedSquare = p.Surface((SQUARE_SIZE, SQUARE_SIZE))
     highlightedSquare.set_alpha(70)
+    
+    # highlighting the king if it's in check
+    
+    if gamestate.kings[gamestate.turnPlayer].inCheck:
+        
+        highlightedSquare.fill(p.Color("red"))
+        king = gamestate.kings[gamestate.turnPlayer]
+        
+        kingCoordinates = (king.col*SQUARE_SIZE+BORDERS["l"], 
+                           king.row*SQUARE_SIZE+BORDERS["t"])
+        window.blit(highlightedSquare, kingCoordinates)
     
     # highlighting last move
     
@@ -111,6 +129,7 @@ def highlightMoves(window, gamestate, legalMoves, selectedSquare, SQUARE_SIZE, B
     # highlighting the piece's possible moves
     
     highlightedSquare.fill(p.Color("green"))
+    
     for move in legalMoves:
         
         if move.startRow == row and move.startCol == col:
