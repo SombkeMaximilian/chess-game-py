@@ -162,7 +162,7 @@ def drawMoveLog(window, gamestate, font, totalWidth, HEIGHT, BORDERS):
     if not gamestate.moveLog:
         return
     
-    gap = 14
+    gap = 12
     
     logText = []
     
@@ -183,13 +183,14 @@ def drawMoveLog(window, gamestate, font, totalWidth, HEIGHT, BORDERS):
         args = [iter(iterable)] * n
         return itertools.zip_longest(*args, fillvalue=fillvalue)
     
-    turnsPerLine = 3
+    turnsPerLine = 4
     currLine = 0
+    leftMargin = 5
     
     for line in grouper(logText, turnsPerLine):
         
         text = font.render("".join(line), True, p.Color("black"))
-        textBox = p.Rect(moveLogX, moveLogY+currLine*gap, moveLogWidth, gap)
+        textBox = p.Rect(moveLogX+leftMargin, moveLogY+currLine*gap, moveLogWidth, gap)
         window.blit(text, textBox)
         currLine += 1
         

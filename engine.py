@@ -547,6 +547,9 @@ class Move():
     if any.
     """
     
+    colToRank = {0: "a", 1: "b", 2: "c", 3: "d", 4: "e", 5: "f", 6: "g", 7: "h"}
+    rowToFile = {0: 8, 1: 7, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 1}
+    
     def __init__(self, start, destination, board, 
                  pawnpromotion = False,
                  enpassant = False):
@@ -586,7 +589,7 @@ class Move():
     
     def __str__(self):
         
-        return self.moveID
+        return self.chessNotation()
     
     
     def __eq__(self, other):
@@ -598,6 +601,48 @@ class Move():
         else:
             
             raise TypeError("Comparison between move and " + type(other) + " not supported.")
+
+    
+    def chessNotation(self):
+        
+        """
+        Get the chess notation of a move. This is not fully implemented, it's
+        just to have a somewhat readable display of a move in the move log.
+        """
+        
+        startRank = str(self.colToRank[self.startCol])
+        endRank = str(self.colToRank[self.destinationCol])
+        endFile = str(self.rowToFile[self.destinationRow])
+        
+        piece = str(self.movedPiece)[1]
+        
+        if self.capturedPiece != None:
+            capture = True
+        else:
+            capture = False
+        
+        if self.isPawnPromotion:
+            
+            if capture:
+                notation = startRank + "x" + endRank + endFile + str(self.movedPiece)[1]
+            else:
+                notation = endRank + endFile + str(self.movedPiece)[1]
+            
+        if self.movedPiece.pieceType != "Pawn":
+            
+            if capture:
+                notation = piece + "x" + endRank + endFile
+            else:
+                notation = piece + endRank + endFile
+            
+        else:
+            
+            if capture:
+                notation = startRank + "x" + endRank + endFile
+            else:
+                notation = endRank + endFile
+        
+        return notation
 
 
 class Castle(Move):

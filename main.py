@@ -18,13 +18,12 @@ def main():
     # set up pygame
     totalWidth = WIDTH + BORDERS["l"] + BORDERS["r"]
     totalHeight = WIDTH + BORDERS["t"] + BORDERS["b"]
-    print(totalWidth, totalHeight)
     window = p.display.set_mode((totalWidth, totalHeight))
     window.fill(p.Color("white"))
     clock = p.time.Clock()
     
     # font for the move log
-    font = p.font.Font("fonts/Segoe UI.ttf", 14)
+    font = p.font.Font("fonts/Segoe UI.ttf", 12)
     
     # generate initial gamestate
     gamestate = engine.GameState()
