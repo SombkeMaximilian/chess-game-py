@@ -26,7 +26,7 @@ def main():
     newGameState = False
     
     # load images here, only needs to be done once
-    IMG = graphics.loadPieceImages()
+    images = graphics.loadImages()
     
     selectedSquare = ()
     moveCoordinates = []
@@ -112,13 +112,20 @@ def main():
             
             legalMoves = gamestate.generateLegalMoves()
             newGameState = False
-            
-        graphics.drawGameState(window, gamestate, legalMoves, selectedSquare, SQUARE_SIZE, BORDERS, DIM, IMG)
         
+        graphics.drawGameState(window, gamestate, legalMoves, selectedSquare, images, SQUARE_SIZE, BORDERS, DIM)
+        
+        # end of game screen
         if gamestate.checkmate:
+            
             gameover = True
+            winner = [player for player in gamestate.players if player != gamestate.turnPlayer][0]
+            graphics.gameoverText(window, winner + "wins", images, WIDTH, BORDERS)
+            
         elif gamestate.stalemate:
+            
             gameover = True
+            graphics.gameoverText(window, "stalemate", images, WIDTH, BORDERS)
         
         clock.tick(FPS)
         p.display.flip()
@@ -140,7 +147,7 @@ if __name__ == "__main__":
     """
     
     WIDTH = HEIGHT = 512
-    BORDERS = 100
+    BORDERS = 0
     DIM = 8
     SQUARE_SIZE = int(WIDTH / DIM)
     FPS = 30

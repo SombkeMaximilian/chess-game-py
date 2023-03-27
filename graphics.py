@@ -2,7 +2,7 @@
 
 import pygame as p
 
-def loadPieceImages():
+def loadImages():
     
     """
     Loads the images of the pieces into memory. A dictionary is used for ease of access.
@@ -16,11 +16,17 @@ def loadPieceImages():
     for piece in pieces:
         images[piece] = p.image.load(f"images/pieces/{piece}.png")
         
+    results = ["whitewins", "blackwins", "stalemate"]
+    
+    for result in results:
+        images[result] = p.image.load(f"images/endgame/{result}.png")
+    
+        
     return images
      
    
-def drawGameState(window, gamestate, legalMoves, selectedSquare, 
-                  SQUARE_SIZE, BORDERS, DIM, IMG):
+def drawGameState(window, gamestate, legalMoves, selectedSquare, images, 
+                  SQUARE_SIZE, BORDERS, DIM):
     
     """
     Draws a given game state on screen and updates it.
@@ -56,7 +62,7 @@ def drawGameState(window, gamestate, legalMoves, selectedSquare,
                 continue
             
             square = p.Rect(col*SQUARE_SIZE+BORDERS, row*SQUARE_SIZE+BORDERS, SQUARE_SIZE, SQUARE_SIZE)
-            piece = p.transform.scale(IMG[str(currentSquare)], (SQUARE_SIZE, SQUARE_SIZE))
+            piece = p.transform.scale(images[str(currentSquare)], (SQUARE_SIZE, SQUARE_SIZE))
             window.blit(piece, square)
     
     return
@@ -101,6 +107,18 @@ def highlightMoves(window, gamestate, legalMoves, selectedSquare, SQUARE_SIZE, B
     return
 
 
-def gameovertext(window, winner):
+def gameoverText(window, result, images, WIDTH, BORDERS):
     
-    pass
+    """
+    Displays the end of game screen when called.
+    """
+    
+    totalwidth = WIDTH + 2 * BORDERS
+    size = (WIDTH * 0.8, WIDTH * 0.4)
+    centeredposition = (totalwidth/2 - size[0]/2, totalwidth/2 - size[1]/2)
+    
+    endgamesurface = p.Rect(*centeredposition, *size)
+    endgametext = p.transform.scale(images[result], size)
+    window.blit(endgametext, endgamesurface)
+    
+    return
